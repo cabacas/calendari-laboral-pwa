@@ -1,0 +1,3504 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1B2A4A" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Control Horari" />
+  <link rel="manifest" href="./manifest.json" />
+  <link id="pwa-apple-icon" rel="apple-touch-icon" />
+  <title>Control Horari</title>
+  <style>
+    :root {
+      --bg-page: #F1F5F9;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --border-soft: #CBD5E1;
+      --border-grid: #94A3B8;
+      --text-dark: #0F172A;
+      --text-muted: #475569;
+
+      --corp-navy: #1B2A4A;
+      --corp-navy-light: #283C63;
+      --corp-accent: #2563EB;
+      --corp-accent-hover: #1D4ED8;
+      --corp-accent-soft: #EFF6FF;
+
+      --c-laborable-bg: #FFFFFF;
+      --c-weekend-bg: #CBD5E1;
+      --c-weekend-border: #94A3B8;
+
+      --c-festiu-nac-bg: #DC2626;
+      --c-festiu-nac-txt: #FFFFFF;
+      --c-festiu-aut-bg: #EA580C;
+      --c-festiu-aut-txt: #FFFFFF;
+      --c-festiu-loc-bg: #0284C7;
+      --c-festiu-loc-txt: #FFFFFF;
+      --c-festiu-norec-bg: #9333EA;
+      --c-festiu-norec-txt: #FFFFFF;
+
+      --c-vacances-bg: #16A34A;
+      --c-vacances-txt: #FFFFFF;
+      --c-ap-bg: #FACC15;
+      --c-ap-txt: #422006;
+      --c-antiguitat-bg: #4F46E5;
+      --c-antiguitat-txt: #FFFFFF;
+      --c-trienni-bg: #C026D3;
+      --c-trienni-txt: #FFFFFF;
+      --c-ss-bg: #0D9488;
+      --c-ss-txt: #FFFFFF;
+      --c-nadal-bg: #E11D48;
+      --c-nadal-txt: #FFFFFF;
+      --c-cap-bg: #06B6D4;
+      --c-cap-txt: #083344;
+      --c-formacio-bg: #F59E0B;
+      --c-formacio-txt: #451A03;
+      --c-altres-bg: #475569;
+      --c-altres-txt: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-dark);
+      font-size: 12px;
+      padding: 6px 10px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @media (min-width: 901px) {
+      html, body { height: 100%; overflow: hidden; }
+      body { display: flex; flex-direction: column; }
+      .dashboard-grid {
+        flex: 1; min-height: 0; display: grid;
+        grid-template-columns: 1fr 375px; gap: 8px; align-items: stretch;
+      }
+      .calendar-card { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+      #view-annual { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+      #view-annual .table-scroll { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: hidden; }
+      #view-annual table.cal-table { height: 100%; }
+      #view-annual table.cal-table tbody tr { height: calc(100% / 31); }
+      #view-annual table.cal-table td { height: auto; padding: 0 2px; }
+
+      #view-charts { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
+      #view-charts .charts-container { flex: 1; min-height: 0; display: grid; grid-template-rows: 1fr 1.15fr; gap: 8px; padding: 8px 10px; }
+      #view-charts .charts-two-col { min-height: 0; height: 100%; }
+      #view-charts .chart-card { display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 7px 10px; }
+      #view-charts .chart-body-flex { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      #view-charts .chart-body-flex > svg { width: 100%; height: 100%; max-height: 100%; }
+
+      .right-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 0; gap: 6px; }
+      .right-column .panel-card:nth-child(2) { max-height: 44%; overflow-y: auto; }
+      .right-column .panel-card:last-child { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; overflow-y: auto; }
+      .right-column .legend-pills { flex: 1; align-content: stretch; }
+      .right-column .legend-pill { display: flex; align-items: center; justify-content: center; }
+    }
+
+    @keyframes highlightPulseZoom {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px #0F172A, 0 0 10px rgba(15, 23, 42, 0.55); filter: brightness(1.08); }
+      50% { transform: scale(1.12); box-shadow: 0 0 0 3px #FACC15, 0 0 16px rgba(250, 204, 21, 0.9); filter: brightness(1.22); }
+    }
+
+    body.has-highlight-filter td.day-cell:not(.highlight-match):not(.disabled-cell),
+    body.has-highlight-filter .cal-7-day:not(.highlight-match):not(.empty) {
+      opacity: 0.3; transition: opacity 0.2s ease;
+    }
+
+    .highlight-match {
+      animation: highlightPulseZoom 1.15s infinite ease-in-out;
+      z-index: 15 !important; position: relative; border-radius: 4px;
+    }
+
+    td.day-cell.is-today {
+      box-shadow: inset 0 0 0 2px var(--corp-accent) !important;
+      font-weight: 800; position: relative; z-index: 5;
+    }
+    td.day-cell.is-today::after {
+      content: ""; position: absolute; top: 1.5px; left: 1.5px;
+      width: 4.5px; height: 4.5px; border-radius: 50%; background: var(--corp-accent);
+    }
+
+    .cal-7-day.is-today { border: 2px solid var(--corp-accent) !important; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+    .today-pill-tag { background: var(--corp-accent); color: #FFFFFF; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 4px; }
+
+    .toast-banner {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-120px);
+      background: var(--corp-navy); color: #FFFFFF; padding: 9px 18px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2); z-index: 300; display: flex; align-items: center; gap: 8px;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; max-width: 92vw; text-align: center;
+    }
+    .toast-banner.show { transform: translateX(-50%) translateY(0); }
+
+    /* Capçalera */
+    .topbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 9px;
+      padding: 5px 10px; margin-bottom: 5px; flex-shrink: 0; position: relative;
+    }
+    .brand-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand-title { display: flex; align-items: center; gap: 7px; }
+    .brand-icon {
+      width: 25px; height: 25px; background: linear-gradient(135deg, var(--corp-navy) 0%, var(--corp-accent) 100%);
+      color: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;
+    }
+    .brand-title h1 { font-size: 14px; font-weight: 700; color: var(--corp-navy); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .db-badge { font-size: 9px; font-weight: 700; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; padding: 1px 6px; border-radius: 999px; }
+
+    .year-pill-bar { display: inline-flex; align-items: center; background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: 7px; padding: 2px; gap: 2px; }
+    .btn-yr { border: none; background: transparent; color: #334155; font-size: 10.5px; font-weight: 700; padding: 3px 7px; border-radius: 5px; cursor: pointer; }
+    .btn-yr:hover { background: #E2E8F0; color: var(--corp-navy); }
+    .btn-yr.active { background: var(--corp-navy); color: #FFFFFF; }
+
+    .top-right-controls { display: flex; align-items: center; gap: 5px; }
+    .top-actions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .btn-mobile-drawer-toggle { display: none; }
+
+    .btn-action {
+      background: #FFFFFF; border: 1px solid var(--border-soft); color: var(--text-dark);
+      padding: 4px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    }
+    .btn-action:hover:not(:disabled) { background: var(--bg-subtle); border-color: #94A3B8; }
+    .btn-action:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-action.indigo { background: #EFF6FF; border-color: #93C5FD; color: #1E40AF; }
+    .btn-action.purple { background: #F3E8FF; border-color: #D8B4FE; color: #6B21A8; }
+    .btn-action.help-btn { background: #F0FDF4; border-color: #86EFAC; color: #166534; font-weight: 700; }
+    .btn-action.help-btn:hover { background: #DCFCE7; }
+    .btn-action.green { background: #0D9488; border-color: #0D9488; color: #FFFFFF; }
+    .btn-action.amber { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+    .btn-action.pwa-install { background: var(--corp-accent); border-color: var(--corp-accent); color: #FFFFFF; font-weight: 700; }
+
+    .btn-mode-toggle { font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 10.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .btn-mode-toggle.is-editing { background: #FACC15; border: 1px solid #CA8A04; color: #422006; }
+    .btn-mode-toggle.is-readonly { background: var(--corp-navy); border: 1px solid var(--corp-navy); color: #FFFFFF; }
+
+    .sub-nav-bar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 8px;
+      padding: 3.5px 9px; margin-bottom: 5px; flex-shrink: 0;
+    }
+    .view-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+    .view-tab { border: 1px solid transparent; background: transparent; color: #334155; font-size: 10.5px; font-weight: 700; padding: 3.5px 10px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .view-tab:hover { background: var(--bg-subtle); color: var(--corp-navy); }
+    .view-tab.active { background: var(--corp-accent); color: #FFFFFF; }
+
+    .municipi-box { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #334155; }
+    .municipi-select { padding: 3px 7px; border: 1px solid var(--border-soft); border-radius: 5px; font-size: 10.5px; font-weight: 700; color: var(--text-dark); background: var(--bg-subtle); }
+
+    .local-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #FEF9C3; border: 1px solid #FACC15; color: #713F12;
+      padding: 3.5px 10px; border-radius: 7px; margin-bottom: 5px; font-size: 10.5px; font-weight: 600; flex-shrink: 0;
+    }
+    .local-banner.complete { background: #DCFCE7; border-color: #4ADE80; color: #14532D; }
+    .local-banner.readonly-info { background: #E2E8F0; border-color: #94A3B8; color: #1E293B; }
+    .local-banner.backup-warn { background: #FFEDD5; border-color: #FB923C; color: #7C2D12; }
+
+    .calendar-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 9px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); }
+    .calendar-card-header { background: var(--corp-navy); color: #FFFFFF; padding: 5px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; flex-shrink: 0; }
+    .calendar-card-header span.sub { color: #CBD5E1; font-size: 10px; margin-left: 6px; font-weight: 400; }
+
+    /* VISTA ANUAL */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table.cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 860px; }
+    table.cal-table th, table.cal-table td { border-right: 1px solid #CBD5E1; border-bottom: 1px solid #CBD5E1; height: 18px; padding: 0 2px; font-size: 9px; text-align: center; white-space: nowrap; overflow: hidden; }
+    tr.hdr-months th { background: #E2E8F0; color: var(--corp-navy); font-weight: 800; font-size: 9.5px; height: 20px; border-bottom: 1px solid #94A3B8; }
+    tr.hdr-months th.next-yr { color: #FFFFFF; background: var(--corp-accent); border-left: 2px solid var(--corp-navy); }
+    tr.hdr-jorn th { background: #FFFFFF; color: var(--corp-accent); font-weight: 700; font-size: 9px; height: 17px; border-bottom: 1px solid #64748B; cursor: pointer; }
+    body.readonly-mode tr.hdr-jorn th { cursor: default; color: #475569; }
+    tr.hdr-jorn th.next-yr { border-left: 2px solid var(--corp-navy); }
+    .col-day-num { width: 28px; font-weight: 800; color: #334155; background: #E2E8F0; border-right: 1.5px solid #94A3B8 !important; }
+
+    td.day-cell { cursor: pointer; }
+    td.day-cell:hover { box-shadow: inset 0 0 0 1.5px #0F172A; }
+    td.day-cell.next-yr-col { border-left: 2px solid var(--corp-navy); }
+    td.day-cell.weekend-cell { background-color: var(--c-weekend-bg); border-bottom-color: var(--c-weekend-border); }
+    td.day-cell.disabled-cell { background-color: #E2E8F0; cursor: default; }
+
+    .cell-flex { display: flex; align-items: center; justify-content: center; gap: 2px; width: 100%; }
+    .dow-tag { font-size: 8px; color: #64748B; font-weight: 700; flex-shrink: 0; }
+    .weekend-cell .dow-tag { color: #334155; font-weight: 800; }
+    .cell-right { display: inline-flex; align-items: center; justify-content: center; gap: 2px; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+    .badge-text { font-size: 7.8px; font-weight: 800; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+    .time-worked { font-weight: 800; color: var(--text-dark); font-size: 8.8px; }
+    .time-diff-pos { font-weight: 800; color: #15803D; font-size: 8.2px; }
+    .time-diff-neg { font-weight: 800; color: #DC2626; font-size: 8.2px; }
+    .dash-empty { color: #94A3B8; font-size: 8.5px; }
+
+    tfoot td { background: #E2E8F0; font-weight: 800; text-align: center; height: 19px; font-size: 9px; border-top: 1.5px solid #64748B; font-variant-numeric: tabular-nums; }
+    tfoot td.next-yr-col { border-left: 2px solid var(--corp-navy); }
+    tfoot td.saldo-pos { background: #16A34A; color: #FFFFFF; }
+    tfoot td.saldo-neg { background: #DC2626; color: #FFFFFF; }
+
+    /* VISTA MENSUAL */
+    #view-monthly { display: flex; flex-direction: column; height: 100%; }
+    .monthly-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--bg-subtle); border-bottom: 1px solid var(--border-soft); flex-wrap: wrap; gap: 5px; }
+    .month-pills { display: flex; gap: 3px; flex-wrap: wrap; }
+    .m-pill { border: 1px solid var(--border-soft); background: #FFFFFF; color: #1E293B; padding: 3.5px 7.5px; border-radius: 5px; font-size: 10.5px; font-weight: 700; cursor: pointer; }
+    .m-pill.active { background: var(--corp-navy); color: #FFFFFF; border-color: var(--corp-navy); }
+    .monthly-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 6px 10px; background: #FFFFFF; border-bottom: 1px solid var(--border-soft); }
+    .mkpi-box { background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: 7px; padding: 4px 7px; text-align: center; }
+    .mkpi-box .lbl { font-size: 9px; color: var(--text-muted); font-weight: 700; }
+    .mkpi-box .val { font-size: 12.5px; font-weight: 800; margin-top: 1px; font-variant-numeric: tabular-nums; }
+
+    .cal-7-grid { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 8px 10px; background: var(--bg-subtle); }
+    .cal-7-dow { text-align: center; font-weight: 800; font-size: 10px; color: #334155; padding: 2px 0; text-transform: uppercase; }
+    .cal-7-day { background: #FFFFFF; border: 1.5px solid var(--border-soft); border-radius: 7px; min-height: 62px; padding: 4px 6px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; }
+    .cal-7-day:hover { border-color: #0F172A; box-shadow: 0 3px 6px rgba(15, 23, 42, 0.12); }
+    .cal-7-day.empty { background: transparent; border: none; cursor: default; }
+    .cal-7-day.weekend { background: var(--c-weekend-bg); }
+    .c7-top { display: flex; justify-content: space-between; align-items: center; }
+    .c7-num { font-size: 12.5px; font-weight: 800; }
+    .c7-teo { font-size: 8.5px; font-weight: 700; opacity: 0.85; }
+    .c7-mid { font-size: 9px; font-weight: 800; text-transform: uppercase; margin: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .c7-punches { font-size: 8.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .c7-bot { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.18); padding-top: 2px; font-size: 9.5px; font-weight: 800; }
+
+    /* VISTA ANALÍTICA I HISTORIAL */
+    #view-history { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
+    .charts-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .chart-card { background: #FFFFFF; border: 1px solid var(--border-soft); border-radius: 8px; padding: 8px 10px; }
+    .chart-title { font-size: 11.5px; font-weight: 800; color: var(--corp-navy); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+    .charts-two-col { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; }
+
+    .search-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; background: var(--bg-subtle); border-bottom: 1px solid var(--border-soft); align-items: center; }
+    .search-input { padding: 5px 8px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 11.5px; background: #FFFFFF; }
+    table.hist-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    table.hist-table th { background: #E2E8F0; color: var(--corp-navy); font-weight: 800; text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--border-grid); position: sticky; top: 0; }
+    table.hist-table td { padding: 5px 9px; border-bottom: 1px solid var(--border-soft); }
+    table.hist-table tr:hover td { background: var(--bg-subtle); cursor: pointer; }
+
+    /* PANELL LATERAL DRET */
+    .panel-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 9px; padding: 7px 9px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .panel-title { font-size: 11px; font-weight: 800; color: var(--corp-navy); display: flex; align-items: center; gap: 4px; }
+    .pill-badge { background: #E2E8F0; color: #1E293B; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+
+    .kpi-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 5px; }
+    .kpi-mini { background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: 6px; padding: 4px 6px; }
+    .kpi-mini.blue-tint { background: var(--corp-accent-soft); border-color: #93C5FD; }
+    .kpi-mini .lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 1px; font-weight: 600; }
+    .kpi-mini.blue-tint .lbl { color: var(--corp-accent); font-weight: 700; }
+    .kpi-mini .val { font-size: 12px; font-weight: 800; color: var(--text-dark); font-variant-numeric: tabular-nums; }
+    .kpi-mini.blue-tint .val { color: #1E40AF; }
+
+    .saldo-banner { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 6px; background: #16A34A; color: #FFFFFF; margin-bottom: 4px; }
+    .saldo-banner.neg { background: #DC2626; color: #FFFFFF; }
+    .saldo-banner .big-val { font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    .projection-box { background: var(--bg-subtle); border: 1.5px dashed #64748B; border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+    .proj-title { font-size: 9.5px; font-weight: 700; color: #1E293B; }
+    .proj-sub { font-size: 8.5px; color: var(--text-muted); }
+    .proj-val { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    table.borsa-tbl { width: 100%; border-collapse: collapse; font-size: 9.8px; }
+    table.borsa-tbl th { text-align: center; font-size: 8px; color: var(--text-muted); font-weight: 800; padding: 2px 1px; border-bottom: 1px solid var(--border-soft); text-transform: uppercase; }
+    table.borsa-tbl th:first-child { text-align: left; }
+    table.borsa-tbl td { padding: 2px 1px; border-bottom: 1px solid #F1F5F9; text-align: center; font-variant-numeric: tabular-nums; }
+    table.borsa-tbl td:first-child { text-align: left; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 4px; }
+    .dot-color { width: 8px; height: 8px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
+    table.borsa-tbl input { width: 31px; text-align: center; border: 1px solid var(--border-soft); border-radius: 4px; padding: 1px; font-size: 9.8px; font-weight: 800; color: var(--text-dark); background: #FFFFFF; }
+    table.borsa-tbl input:disabled { background: var(--bg-subtle); border-color: transparent; color: #1E293B; }
+    .badge-pend { display: inline-block; min-width: 19px; padding: 1px 4px; border-radius: 4px; font-weight: 800; font-size: 9px; }
+    .pend-pos { background: #FACC15; color: #422006; }
+    .pend-zero { background: #16A34A; color: #FFFFFF; }
+    .pend-neg { background: #DC2626; color: #FFFFFF; }
+    table.borsa-tbl tr.total-row td { border-top: 1.5px solid var(--border-grid); border-bottom: none; padding-top: 3px; font-weight: 800; color: var(--corp-navy); }
+
+    .legend-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5px; }
+    .legend-pill {
+      padding: 3px 4px; border-radius: 5px; font-size: 8.8px; font-weight: 800;
+      border: 1px solid rgba(0,0,0,0.15); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .legend-pill.interactive { cursor: pointer; }
+    .legend-pill.interactive:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(15, 23, 42, 0.22); }
+    .legend-pill.active-filter { outline: 2.5px solid #0F172A; outline-offset: 1px; transform: scale(1.03); box-shadow: 0 0 10px rgba(15, 23, 42, 0.35); }
+    .btn-clear-filter { background: #DC2626; color: #FFFFFF; border: none; border-radius: 4px; padding: 1.5px 6px; font-size: 8.5px; font-weight: 800; cursor: pointer; }
+
+    /* ============================================================
+       ADAPTACIÓ MÒBIL EQUILIBRADA
+       ============================================================ */
+    .mobile-bottom-nav { display: none; }
+    .mobile-fab-punch { display: none; }
+
+    @media (max-width: 900px) {
+      .dashboard-grid { display: flex; flex-direction: column; gap: 10px; }
+      .right-column { display: flex; flex-direction: column; gap: 8px; }
+      .charts-two-col { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 6px 8px 74px 8px; }
+
+      .topbar { padding: 7px 9px; gap: 6px; align-items: center; }
+      .brand-group { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; }
+      .brand-title h1 { font-size: 13.5px; }
+      .db-badge { display: none; }
+
+      .year-pill-bar { width: 100%; justify-content: space-between; padding: 3px 4px; }
+      .btn-yr { flex: 1; text-align: center; padding: 4px 2px; font-size: 11px; }
+
+      .top-right-controls { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+      .top-right-controls.has-undo { grid-template-columns: 1fr auto auto; }
+      .btn-mode-toggle { justify-content: center; padding: 7px 10px; font-size: 11.5px; }
+      .btn-mobile-drawer-toggle {
+        display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+        background: var(--bg-subtle); border: 1px solid var(--border-grid); color: var(--corp-navy);
+        font-weight: 700; font-size: 11.5px; padding: 7px 12px; border-radius: 6px; cursor: pointer;
+      }
+      .btn-mobile-drawer-toggle.open { background: var(--corp-navy); color: #FFFFFF; border-color: var(--corp-navy); }
+
+      /* Graella simètrica 2x3/4 per a les eines */
+      .top-actions {
+        display: none; width: 100%; grid-template-columns: 1fr 1fr; gap: 6px;
+        padding-top: 6px; border-top: 1px dashed var(--border-soft); grid-column: 1 / -1;
+      }
+      .top-actions.mobile-open { display: grid; }
+      .top-actions .btn-action, .top-actions label.btn-action {
+        width: 100%; justify-content: center; padding: 8px 6px; font-size: 11px;
+      }
+
+      .sub-nav-bar .view-tabs { display: none; }
+      .sub-nav-bar { padding: 5px 8px; }
+      .municipi-box { width: 100%; justify-content: space-between; }
+      .municipi-select { flex: 1; max-width: 72%; padding: 5px 8px; font-size: 11px; }
+
+      .local-banner { flex-direction: column; align-items: flex-start; gap: 2px; font-size: 10px; }
+
+      .monthly-kpis { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+      .cal-7-grid { gap: 3px; padding: 6px; }
+      .cal-7-day { min-height: 62px; padding: 4px; }
+      .c7-num { font-size: 11.5px; }
+      .c7-teo { display: none; }
+      .c7-punches { font-size: 8px; }
+
+      body.mobile-show-summary .calendar-card { display: none; }
+      body:not(.mobile-show-summary) .right-column { display: none; }
+
+      .mobile-bottom-nav {
+        display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--corp-navy); border-top: 1px solid #334155; z-index: 90; padding: 4px 2px env(safe-area-inset-bottom, 4px) 2px;
+      }
+      .mob-nav-btn { background: transparent; border: none; color: #94A3B8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; font-size: 9.5px; font-weight: 700; cursor: pointer; }
+      .mob-nav-btn span.ico { font-size: 15px; }
+      .mob-nav-btn.active { color: #FFFFFF; }
+
+      body:not(.readonly-mode) .mobile-fab-punch {
+        display: flex; align-items: center; gap: 6px; position: fixed; right: 14px; bottom: 64px;
+        background: var(--corp-accent); color: #FFFFFF; border: none; border-radius: 999px;
+        padding: 11px 16px; font-size: 12.5px; font-weight: 800; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45); z-index: 95; cursor: pointer;
+      }
+    }
+
+    /* ============================================================
+       MODALS I ACORDIONS D'AJUDA INTERACTIVA
+       ============================================================ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px); z-index: 120; align-items: center; justify-content: center; padding: 12px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: #FFFFFF; border-radius: 14px; width: 100%; max-width: 510px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4); overflow: hidden; border: 1px solid var(--border-soft);
+    }
+    .modal-dark-top { background: var(--corp-navy); color: #FFFFFF; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-dow-sub { font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; color: #93C5FD; text-transform: uppercase; margin-bottom: 2px; }
+    .modal-date-big { font-size: 17px; font-weight: 800; color: #FFFFFF; }
+    .modal-close-x { background: transparent; border: none; color: #CBD5E1; font-size: 18px; cursor: pointer; padding: 4px 8px; }
+
+    .modal-body-pad { padding: 15px 18px; max-height: 76vh; overflow-y: auto; }
+    .m-field { margin-bottom: 12px; }
+    .m-label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+    .m-select, .m-input { width: 100%; padding: 8px 11px; border: 1px solid var(--border-grid); border-radius: 8px; font-size: 13px; color: var(--text-dark); }
+    .m-select { font-weight: 700; background-color: var(--bg-subtle); }
+    .m-select:disabled, .m-input:disabled { opacity: 0.75; background: var(--bg-subtle); }
+
+    .punches-box { background: var(--bg-subtle); border: 1px solid var(--border-soft); border-radius: 10px; padding: 10px; margin-bottom: 12px; }
+    .punches-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .punches-box-title { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--corp-navy); }
+    .punches-box-btns { display: flex; gap: 5px; }
+    .btn-pill-white { background: #FFFFFF; border: 1px solid var(--border-grid); color: #334155; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+    .btn-pill-indigo { background: var(--corp-accent); border: 1px solid var(--corp-accent); color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+
+    .punch-item-card { background: #FFFFFF; border: 1px solid var(--border-soft); border-radius: 8px; padding: 7px 10px; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 7px; }
+    .punch-item-card.error-border { border-color: #EF4444; background: #FEF2F2; }
+    .punch-item-card.warn-border { border-color: #F59E0B; background: #FFFBEB; }
+    .punch-col { display: flex; flex-direction: column; flex: 1; }
+    .punch-sublbl { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+    .punch-time-input { border: none; background: transparent; font-size: 14px; font-weight: 700; color: var(--text-dark); font-family: inherit; width: 100%; outline: none; }
+    .punch-arrow { color: #94A3B8; font-size: 13px; }
+    .punch-duration { font-size: 11.5px; font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+    .punch-del-btn { background: transparent; border: none; color: #94A3B8; font-size: 14px; cursor: pointer; padding: 2px 4px; }
+
+    .validation-box { background: #FEF2F2; border: 1px solid #F87171; color: #991B1B; padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px; display: none; }
+    .validation-box.warn { background: #FFFBEB; border-color: #FBBF24; color: #92400E; }
+    .validation-box.show { display: block; }
+
+    .two-cols-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .m-helper { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+    .day-summary-dark { background: var(--corp-navy); border-radius: 10px; padding: 11px 14px; display: flex; justify-content: space-between; align-items: center; color: #FFFFFF; }
+    .ds-lbl { font-size: 10.5px; color: #CBD5E1; margin-bottom: 2px; }
+    .ds-val-big { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .ds-saldo-pos { color: #34D399; }
+    .ds-saldo-neg { color: #F87171; }
+
+    .modal-footer-bar { padding: 10px 18px; background: var(--bg-subtle); border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; }
+    .btn-reset-link { background: transparent; border: none; color: #DC2626; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .footer-right-btns { display: flex; gap: 8px; }
+    .btn-cancel-modal { background: #FFFFFF; border: 1px solid var(--border-grid); color: #334155; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+    .btn-save-modal { background: var(--corp-accent); border: 1px solid var(--corp-accent); color: #FFFFFF; font-size: 12px; font-weight: 700; padding: 6px 16px; border-radius: 8px; cursor: pointer; }
+    .btn-save-modal:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .jornades-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .ap-calc-card { background: #FEF9C3; border: 1px solid #FACC15; border-radius: 9px; padding: 9px 11px; margin-bottom: 12px; }
+
+    .custom-type-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 10px; border: 1px solid var(--border-soft); border-radius: 8px; margin-bottom: 6px; background: #FFFFFF;
+    }
+    .ct-badge { padding: 3px 8px; border-radius: 5px; font-weight: 800; font-size: 11px; }
+    .ct-meta { font-size: 10.5px; color: var(--text-muted); }
+
+    /* Acordions d'Ajuda Interactiva */
+    .help-intro-card {
+      background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
+      border: 1px solid #BFDBFE; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .help-accordion { display: flex; flex-direction: column; gap: 7px; }
+    .acc-item {
+      border: 1px solid var(--border-soft); border-radius: 9px; overflow: hidden; background: #FFFFFF;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .acc-item.open { border-color: var(--corp-accent); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08); }
+    .acc-header {
+      width: 100%; background: var(--bg-subtle); border: none; padding: 10px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      cursor: pointer; text-align: left; font-family: inherit;
+    }
+    .acc-item.open .acc-header { background: #EFF6FF; color: var(--corp-navy); }
+    .acc-title-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--corp-navy); }
+    .acc-icon-box {
+      width: 24px; height: 24px; border-radius: 6px; background: #FFFFFF; border: 1px solid var(--border-soft);
+      display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
+    }
+    .acc-chevron { font-size: 11px; color: var(--text-muted); transition: transform 0.2s ease; font-weight: 800; }
+    .acc-item.open .acc-chevron { transform: rotate(180deg); color: var(--corp-accent); }
+    .acc-body {
+      display: none; padding: 10px 13px; font-size: 11.5px; line-height: 1.55; color: #334155;
+      border-top: 1px solid var(--border-soft); background: #FFFFFF;
+    }
+    .acc-item.open .acc-body { display: block; }
+    .acc-body ul { padding-left: 16px; margin-top: 4px; }
+    .acc-body li { margin-bottom: 4px; }
+    .acc-pill-hint {
+      display: inline-block; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 4px;
+      padding: 0 5px; font-weight: 700; font-size: 10.5px; color: var(--corp-navy);
+    }
+
+    .audit-row {
+      padding: 6px 8px; border-bottom: 1px solid var(--border-soft); font-size: 11px;
+      display: flex; justify-content: space-between; gap: 8px;
+    }
+    .audit-ts { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: 10px; white-space: nowrap; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="readonly-mode">
+
+  <!-- Toast Flotant d'Avisos -->
+  <div class="toast-banner" id="toast-banner"></div>
+
+  <!-- Capçalera Superior Corporativa -->
+  <header class="topbar">
+    <div class="brand-group">
+      <div class="brand-title">
+        <div class="brand-icon">🕒</div>
+        <div>
+          <h1>Control Horari <span class="db-badge" id="db-status-badge">IndexedDB</span></h1>
+        </div>
+      </div>
+
+      <div class="year-pill-bar" id="year-nav"></div>
+    </div>
+
+    <div class="top-right-controls" id="top-right-controls">
+      <button type="button" class="btn-mode-toggle is-readonly" id="btn-toggle-mode">
+        🔒 Visualització
+      </button>
+
+      <button type="button" class="btn-action amber hidden" id="btn-undo" title="Desfà l'última modificació">
+        ↩ Desfer (<span id="undo-count">0</span>)
+      </button>
+
+      <button type="button" class="btn-mobile-drawer-toggle" id="btn-mobile-menu" aria-expanded="false">
+        ☰ Eines
+      </button>
+
+      <div class="top-actions" id="top-actions-drawer">
+        <button type="button" class="btn-action help-btn" id="btn-open-help" title="Guia interactiva d'ús i preguntes freqüents">
+          ❓ Ajuda
+        </button>
+        <button type="button" class="btn-action pwa-install" id="btn-install-pwa" title="Instal·la com a aplicació independent">
+          📲 Instal·lar App
+        </button>
+        <button class="btn-action purple" id="btn-open-custom-types" disabled>🎨 Tipus de Dia</button>
+        <button class="btn-action indigo" id="btn-open-jornades" disabled>⚙ Jornades i AP</button>
+        <button class="btn-action green" id="btn-export-csv">📥 CSV</button>
+        <button class="btn-action" id="btn-export-json">💾 Backup</button>
+        <label class="btn-action" id="lbl-import-json" style="cursor:pointer; opacity:0.5; pointer-events:none;">
+          📂 Restaurar
+          <input type="file" id="input-import-json" accept=".json" style="display:none;" disabled />
+        </label>
+        <button type="button" class="btn-action" id="btn-open-audit" title="Registre d'auditoria de canvis">
+          🛡️ Registre
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Barra de Vistes i Municipi -->
+  <nav class="sub-nav-bar">
+    <div class="view-tabs" id="view-tabs">
+      <button type="button" class="view-tab active" data-view="annual">📅 Vista Anual</button>
+      <button type="button" class="view-tab" data-view="monthly">📆 Vista Mensual</button>
+      <button type="button" class="view-tab" data-view="charts">📈 Analítica i Gràfics</button>
+      <button type="button" class="view-tab" data-view="history">🔍 Historial i Cerca</button>
+    </div>
+
+    <div class="municipi-box">
+      <label for="sel-municipi">🏙 Municipi:</label>
+      <select id="sel-municipi" class="municipi-select" disabled>
+        <option value="terrassa">Terrassa (Segona Pasqua + Festa Major)</option>
+        <option value="barcelona">Barcelona (Segona Pasqua + La Mercè)</option>
+        <option value="sabadell">Sabadell (Aplec de la Salut + Festa Major)</option>
+        <option value="girona">Girona (Sant Jaume + Sant Narcís)</option>
+        <option value="lleida">Lleida (Sant Anastasi + Sant Miquel)</option>
+        <option value="tarragona">Tarragona (Sant Magí + Santa Tecla)</option>
+        <option value="manual">Manual</option>
+      </select>
+    </div>
+  </nav>
+
+  <!-- Banner d'estat -->
+  <div class="local-banner readonly-info" id="local-banner">
+    <span id="local-banner-msg">🔒 Mode Visualització: el calendari està protegit contra canvis accidentals.</span>
+    <span id="local-banner-hint" style="font-weight:700;">Prem «🔒 Visualització» a dalt per activar l'edició</span>
+  </div>
+
+  <!-- Cos Principal -->
+  <div class="dashboard-grid">
+    <!-- CONTENIDOR ESQUERRA -->
+    <section class="calendar-card">
+      <!-- 1. VISTA ANUAL -->
+      <div id="view-annual">
+        <div class="calendar-card-header">
+          <div>
+            <strong>Calendari Anual (<span id="lbl-cal-years"></span>)</strong>
+            <span class="sub" id="lbl-cal-sub">· Clica qualsevol dia per consultar o prem la llegenda per ressaltar</span>
+          </div>
+          <span style="font-size:10px; color:#CBD5E1;">Pròrroga fins 31/01</span>
+        </div>
+
+        <div class="table-scroll">
+          <table class="cal-table">
+            <thead>
+              <tr class="hdr-months" id="thead-months"></tr>
+              <tr class="hdr-jorn" id="thead-jornades"></tr>
+            </thead>
+            <tbody id="tbody-days"></tbody>
+            <tfoot id="tfoot-totals"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. VISTA MENSUAL -->
+      <div id="view-monthly" class="hidden">
+        <div class="calendar-card-header">
+          <div>
+            <strong id="lbl-monthly-title">Vista Mensual Detallada</strong>
+            <span class="sub">· Calendari tradicional amb detall de trams i saldos</span>
+          </div>
+          <span style="font-size:10px; color:#CBD5E1;" id="lbl-monthly-jorn">Jornada mes: 07:08</span>
+        </div>
+
+        <div class="monthly-toolbar">
+          <div class="month-pills" id="monthly-selector-pills"></div>
+        </div>
+
+        <div class="monthly-kpis">
+          <div class="mkpi-box">
+            <div class="lbl">Dies Laborables</div>
+            <div class="val" id="mkpi-dies">0</div>
+          </div>
+          <div class="mkpi-box">
+            <div class="lbl">Hores Teòriques</div>
+            <div class="val" id="mkpi-teo">00:00 h</div>
+          </div>
+          <div class="mkpi-box">
+            <div class="lbl">Treballades Reals</div>
+            <div class="val" id="mkpi-real" style="color:var(--corp-accent);">00:00 h</div>
+          </div>
+          <div class="mkpi-box" id="mkpi-saldo-box">
+            <div class="lbl">Saldo del Mes</div>
+            <div class="val" id="mkpi-saldo">00:00 h</div>
+          </div>
+        </div>
+
+        <div class="cal-7-grid" id="cal-7-container"></div>
+      </div>
+
+      <!-- 3. VISTA ANALÍTICA I GRÀFICS -->
+      <div id="view-charts" class="hidden">
+        <div class="calendar-card-header">
+          <div>
+            <strong>Analítica Visual i Evolució (<span id="lbl-charts-year"></span>)</strong>
+          </div>
+          <span style="font-size:10px; color:#CBD5E1;">Resum gràfic anual</span>
+        </div>
+
+        <div class="charts-container">
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>📈 Evolució del Saldo Mensual i Acumulat (Hores)</span>
+              <span style="font-size:9.5px; color:#64748B;">Línia blava: Saldo acumulat</span>
+            </div>
+            <div class="chart-body-flex" id="chart-line-saldo"></div>
+          </div>
+
+          <div class="charts-two-col">
+            <div class="chart-card">
+              <div class="chart-title"><span>📊 Hores Teòriques vs. Treballades</span></div>
+              <div class="chart-body-flex" id="chart-bars-hours"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-title"><span>🍩 Distribució de Dies / Permisos</span></div>
+              <div class="chart-body-flex" id="chart-donut-days"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. VISTA HISTORIAL I CERCA -->
+      <div id="view-history" class="hidden">
+        <div class="calendar-card-header">
+          <div>
+            <strong>Historial, Filtres i Cerca Ràpida (<span id="lbl-hist-year"></span>)</strong>
+          </div>
+          <span class="pill-badge" id="hist-count-badge" style="color:var(--corp-navy);">0 registres</span>
+        </div>
+
+        <div class="search-toolbar">
+          <select id="filter-hist-type" class="search-input">
+            <option value="ALL">Tots els tipus de dia (amb activitat o permís)</option>
+            <option value="PUNCHES">Només dies amb fitxatges reals</option>
+          </select>
+          <input type="text" id="filter-hist-text" class="search-input" style="flex:1; min-width:160px;" placeholder="Cerca per text (ex: Festa Major, metge, AP...)" />
+          <select id="filter-hist-month" class="search-input">
+            <option value="ALL">Tots els mesos</option>
+          </select>
+        </div>
+
+        <div class="table-scroll" style="flex: 1; overflow-y: auto;">
+          <table class="hist-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Dia</th>
+                <th>Tipus</th>
+                <th>Observacions</th>
+                <th>Marcatges</th>
+                <th>Temps Efectiu</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-history"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUMNA DRETA -->
+    <aside class="right-column">
+      <!-- Resum Global d'Hores + Projecció Final d'Any -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">📊 Resum Global (<span id="lbl-kpi-year"></span>)</span>
+          <span class="pill-badge" id="badge-worked-days">0 dies lab.</span>
+        </div>
+
+        <div class="kpi-2x2">
+          <div class="kpi-mini" id="kpi-conveni-box">
+            <div class="lbl" id="lbl-conveni-title">Hores Conveni Anual</div>
+            <div class="val" id="kpi-conveni">1668:00 h</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="lbl">Hores Laborables Cal.</div>
+            <div class="val" id="kpi-calendari-teo">00:00 h</div>
+            <div style="font-size:8.5px; color:#64748B;" id="kpi-dif-conveni">Excedent: 00:00 h</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="lbl">Treballades Reals</div>
+            <div class="val" id="kpi-teoric-fitxat">00:00 h</div>
+          </div>
+          <div class="kpi-mini blue-tint">
+            <div class="lbl">Pendents Realitzar</div>
+            <div class="val" id="kpi-reals">00:00 h</div>
+          </div>
+        </div>
+
+        <div class="saldo-banner" id="saldo-banner">
+          <div>
+            <div style="font-weight:800; font-size:10px;">SALDO ACTUAL DIES FITXATS</div>
+            <div style="font-size:8.5px; opacity:0.9;">Diferència real vs teòric fitxats</div>
+          </div>
+          <div class="big-val" id="kpi-saldo">+00:00 h</div>
+        </div>
+
+        <div class="projection-box" id="projection-box">
+          <div>
+            <div class="proj-title">🔮 Projecció a 31 de desembre</div>
+            <div class="proj-sub" id="proj-subtext">Segons la mitjana dels dies fitxats</div>
+          </div>
+          <div class="proj-val" id="proj-val">00:00 h</div>
+        </div>
+      </div>
+
+      <!-- Borses de Dies Disponibles -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">📅 Borsa de Dies Disponibles</span>
+          <span class="pill-badge" id="badge-borsa-status">Només lectura</span>
+        </div>
+
+        <table class="borsa-tbl">
+          <thead>
+            <tr>
+              <th>Concepte</th>
+              <th title="Dies totals assignats">Assign.</th>
+              <th title="Dies sol·licitats al calendari">Sol·lic.</th>
+              <th title="Dies ja consumits">Consum.</th>
+              <th title="Dies restants">Rest.</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-borsa"></tbody>
+        </table>
+      </div>
+
+      <!-- Llegenda Interactiva -->
+      <div class="panel-card">
+        <div class="panel-header" style="margin-bottom:4px;">
+          <span class="panel-title" style="font-size:9.5px; text-transform:uppercase; color:#334155;">Llegenda (Clica per ressaltar)</span>
+          <button type="button" class="btn-clear-filter hidden" id="btn-clear-highlight">✕ Aturar destell</button>
+        </div>
+        <div class="legend-pills" id="legend-container"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Botó Flotant Fitxar Ara (mòbil) -->
+  <button type="button" class="mobile-fab-punch" id="btn-mobile-quick-punch">
+    ⚡ Fitxar Avui
+  </button>
+
+  <!-- Barra de Navegació Inferior Mòbil -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <button type="button" class="mob-nav-btn active" data-mob-tab="monthly">
+      <span class="ico">📆</span><span>Mes</span>
+    </button>
+    <button type="button" class="mob-nav-btn" data-mob-tab="annual">
+      <span class="ico">📅</span><span>Any</span>
+    </button>
+    <button type="button" class="mob-nav-btn" data-mob-tab="summary">
+      <span class="ico">📊</span><span>Borses</span>
+    </button>
+    <button type="button" class="mob-nav-btn" data-mob-tab="charts">
+      <span class="ico">📈</span><span>Gràfics</span>
+    </button>
+    <button type="button" class="mob-nav-btn" data-mob-tab="history">
+      <span class="ico">🔍</span><span>Cerca</span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       POPUP D'AJUDA INTERACTIVA AMB ACORDIONS
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-help">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub">GUIA RÀPIDA D'ÚS</div>
+          <div class="modal-date-big">Ajuda Interactiva · Control Horari</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-help" title="Tancar">✕</button>
+      </div>
+      <div class="modal-body-pad">
+        <div class="help-intro-card">
+          <div style="font-size:22px;">💡</div>
+          <div style="font-size:11px; color:#1E293B; line-height:1.4;">
+            <strong>Privacitat 100 % local:</strong> Totes les teves dades es desen exclusivament dins la base de dades <code>IndexedDB</code> del teu navegador amb registre d'auditoria intern.
+          </div>
+        </div>
+
+        <div class="help-accordion" id="help-accordion-list">
+          <div class="acc-item open">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">🔒</span> 1. Mode Visualització i Mode Edició</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>L'aplicació arrenca sempre en <span class="acc-pill-hint">🔒 Visualització</span> per evitar modificacions accidentals.</li>
+                <li>Prem el botó superior per canviar a <span class="acc-pill-hint">🔓 Mode Edició</span> i habilitar el fitxatge de dies i la configuració.</li>
+                <li>Si t'equivoques, prem <span class="acc-pill-hint">↩ Desfer</span> per recuperar l'estat anterior (fins a 25 passos).</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">🕒</span> 2. Com registrar fitxatges i trams</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>En <strong>Mode Edició</strong>, fes clic sobre qualsevol dia del calendari (anual o mensual).</li>
+                <li>Afegeix un o diversos trams (<span class="acc-pill-hint">+ Tram</span>) per a jornades partides, o prem <span class="acc-pill-hint">Jornada mes</span> per omplir automàticament la jornada estàndard.</li>
+                <li>Al mòbil, tens el botó flotant <span class="acc-pill-hint">⚡ Fitxar Avui</span> per marcar l'hora actual amb un sol toc.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">🎨</span> 3. Tipus de dia personalitzats i Teletreball</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>Prem <span class="acc-pill-hint">🎨 Tipus de Dia</span> per crear categories pròpies (ex. <em>Teletreball</em>, <em>Hores Sindicals</em>).</li>
+                <li>Pots triar si computa com a <strong>treball amb fitxatge</strong> o com a <strong>permís</strong>, i assignar-li una <strong>quota setmanal</strong> (1, 2 o 3 dies/setmana) o una <strong>borsa anual</strong>.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">📅</span> 4. Borsa de dies i Assumptes Propis (57:30 h)</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>A <span class="acc-pill-hint">⚙ Jornades i AP</span> pots ajustar les hores de conveni (1.668 h) i la borsa d'Assumptes Propis (<code>57:30 h</code>), amb opció d'afegir els minuts sobrantes de la divisió directament al saldo anual.</li>
+                <li>A la taula de borses: <strong>Assign.</strong> són els dies totals, <strong>Sol·lic.</strong> els marcats al calendari i <strong>Consum.</strong> els que ja tenen data passada.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">✨</span> 5. Vistes, Gràfics i Llegenda interactiva</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>Fes clic sobre qualsevol etiqueta de la <strong>Llegenda de Colors</strong> per fer destellar al calendari tots els dies d'aquell tipus.</li>
+                <li>Consulta la pestanya <span class="acc-pill-hint">📈 Analítica i Gràfics</span> per veure l'evolució del saldo acumulat i la <span class="acc-pill-hint">🔍 Cerca</span> per filtrar dies concrets.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button type="button" class="acc-header">
+              <span class="acc-title-wrap"><span class="acc-icon-box">💾</span> 6. Còpies de seguretat, Auditoria i Instal·lació</span>
+              <span class="acc-chevron">▼</span>
+            </button>
+            <div class="acc-body">
+              <ul>
+                <li>Fes servir <span class="acc-pill-hint">💾 Backup</span> periòdicament per descarregar un fitxer <code>.json</code> amb totes les teves dades i el seu registre d'auditoria (<span class="acc-pill-hint">🛡️ Registre</span>).</li>
+                <li>Per instal·lar-la com a aplicació sense barres de navegador a <strong>Windows, Android o iOS</strong>, obre-la des d'una adreça web (<code>https://</code>) i prem <span class="acc-pill-hint">📲 Instal·lar App</span>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar" style="justify-content:flex-end;">
+        <button type="button" class="btn-save-modal" id="btn-ok-help">Entès</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Registre d'Auditoria -->
+  <div class="modal-overlay" id="modal-audit">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub">TRAÇABILITAT INTERNA</div>
+          <div class="modal-date-big">Registre d'Auditoria de Canvis</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-audit">✕</button>
+      </div>
+      <div class="modal-body-pad" id="audit-log-container" style="max-height: 65vh; overflow-y: auto;"></div>
+      <div class="modal-footer-bar" style="justify-content:flex-end;">
+        <button type="button" class="btn-save-modal" id="btn-ok-audit">Tancar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Fitxatge / Consulta -->
+  <div class="modal-overlay" id="modal-day">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub" id="modal-dow-label">DIVENDRES</div>
+          <div class="modal-date-big" id="modal-day-title">16 d'octubre de 2026</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-day" title="Tancar">✕</button>
+      </div>
+
+      <div class="modal-body-pad">
+        <div class="validation-box" id="modal-validation-alert"></div>
+
+        <div class="m-field">
+          <label class="m-label" for="sel-day-type">Tipus de Jornada o Festiu</label>
+          <select id="sel-day-type" class="m-select"></select>
+        </div>
+
+        <div class="m-field">
+          <label class="m-label" for="inp-day-note">Nom del Festiu / Observacions</label>
+          <input type="text" id="inp-day-note" class="m-input" placeholder="Ex: Teletreball, Cap d'Any, Festa Major..." />
+        </div>
+
+        <div class="punches-box">
+          <div class="punches-box-header">
+            <div class="punches-box-title">
+              <span style="color:var(--corp-accent); font-size:14px;">🕒</span>
+              <span>Marcatges Entrada / Sortida</span>
+            </div>
+            <div class="punches-box-btns" id="punches-action-btns">
+              <button type="button" class="btn-pill-white" id="btn-fill-jornada">Jornada mes</button>
+              <button type="button" class="btn-pill-indigo" id="btn-add-punch">+ Tram</button>
+            </div>
+          </div>
+
+          <div id="punches-list"></div>
+        </div>
+
+        <div class="two-cols-row">
+          <div>
+            <label class="m-label" for="inp-permis-parcial">Permís Parcial (HH:MM)</label>
+            <input type="text" id="inp-permis-parcial" class="m-input" value="00:00" placeholder="00:00" />
+            <div class="m-helper">Suma al temps treballat</div>
+          </div>
+          <div>
+            <label class="m-label" for="inp-teoric-dia">Teòric d'aquest Dia (HH:MM)</label>
+            <input type="text" id="inp-teoric-dia" class="m-input" value="07:08" placeholder="07:08" />
+            <div class="m-helper" id="lbl-jornada-mes-ref">Jornada mes: 07:08</div>
+          </div>
+        </div>
+
+        <div class="day-summary-dark">
+          <div>
+            <div class="ds-lbl">Temps Efectiu Dia</div>
+            <div class="ds-val-big" id="live-efectiu-dia">00:00 h</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="ds-lbl">Saldo del Dia</div>
+            <div class="ds-val-big ds-saldo-pos" id="live-saldo-dia">00:00 h</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-reset-link" id="btn-reset-day">Restablir dia</button>
+        <div class="footer-right-btns">
+          <button type="button" class="btn-cancel-modal" id="btn-cancel-day">Tancar</button>
+          <button type="button" class="btn-save-modal" id="btn-save-day">Desar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Gestió de Tipus de Dia i Borses / Quotes Setmanals -->
+  <div class="modal-overlay" id="modal-custom-types">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub">PERSONALITZACIÓ</div>
+          <div class="modal-date-big">Tipus de Jornada, Teletreball i Permisos</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-custom-types">✕</button>
+      </div>
+      <div class="modal-body-pad">
+        <div style="background:var(--bg-subtle); border:1px solid var(--border-soft); border-radius:10px; padding:11px; margin-bottom:12px;">
+          <div style="font-weight:800; font-size:12px; color:var(--corp-navy); margin-bottom:8px;">+ Afegir nou tipus de dia</div>
+          <div class="two-cols-row" style="margin-bottom:8px;">
+            <div>
+              <label class="m-label">Nom del tipus</label>
+              <input type="text" id="ct-name" class="m-input" placeholder="Ex: Teletreball" maxlength="28" />
+            </div>
+            <div>
+              <label class="m-label">Etiqueta curta (calendari)</label>
+              <input type="text" id="ct-short" class="m-input" placeholder="Ex: TELETR." maxlength="14" />
+            </div>
+          </div>
+
+          <div class="m-field" style="margin-bottom:8px;">
+            <label class="m-label">Comportament en el còmput d'hores</label>
+            <select id="ct-behavior" class="m-select" style="font-size:11.5px; padding:6px 9px;">
+              <option value="working">Computa com a treball (cal fitxar entrada/sortida, ex. Teletreball)</option>
+              <option value="non_working">Permís / No laborable (descompta jornada del mes sense fitxar)</option>
+            </select>
+          </div>
+
+          <div class="two-cols-row" style="margin-bottom:8px;">
+            <div>
+              <label class="m-label">Règim de dies assignats</label>
+              <select id="ct-quota-mode" class="m-select" style="font-size:11.5px; padding:6px 9px;">
+                <option value="none">Sense límit / Sense borsa</option>
+                <option value="weekly">Quota setmanal (1, 2 o 3 dies/setm.)</option>
+                <option value="annual">Borsa anual de dies</option>
+              </select>
+            </div>
+            <div id="ct-quota-val-box" class="hidden">
+              <label class="m-label" id="ct-quota-val-lbl">Dies assignats</label>
+              <input type="number" id="ct-quota-val" class="m-input" min="1" max="60" value="2" />
+            </div>
+          </div>
+
+          <div class="m-field" style="margin-bottom:9px;">
+            <label class="m-label">Color fons / text i vista prèvia</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="color" id="ct-bg" value="#0284C7" style="width:42px; height:30px; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" />
+              <input type="color" id="ct-txt" value="#FFFFFF" style="width:42px; height:30px; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" />
+              <span id="ct-preview-pill" style="padding:4px 10px; border-radius:5px; font-weight:800; font-size:10px; background:#0284C7; color:#FFFFFF;">VISTA PRÈVIA</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-save-modal" id="btn-add-custom-type" style="width:100%;">Afegir a la meva configuració</button>
+        </div>
+
+        <div style="font-weight:800; font-size:11.5px; color:var(--corp-navy); margin-bottom:6px;">Tipus personalitzats creats:</div>
+        <div id="custom-types-list"></div>
+      </div>
+      <div class="modal-footer-bar" style="justify-content:flex-end;">
+        <button type="button" class="btn-cancel-modal" id="btn-done-custom-types">Tancar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Jornades Mensuals, Conveni i Bossa AP -->
+  <div class="modal-overlay" id="modal-jornades">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub">CONFIGURACIÓ ANUAL</div>
+          <div class="modal-date-big">Jornades, Conveni i Assumptes Propis</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-jornades">✕</button>
+      </div>
+      <div class="modal-body-pad">
+        <div class="validation-box" id="jornades-validation-alert"></div>
+
+        <div class="two-cols-row">
+          <div>
+            <label class="m-label" for="inp-conveni-hours">Hores Conveni Anual</label>
+            <input type="number" id="inp-conveni-hours" class="m-input" min="100" max="2500" step="1" value="1668" />
+          </div>
+          <div>
+            <label class="m-label" for="inp-ap-hours">Borsa Assumptes Propis (HH:MM)</label>
+            <input type="text" id="inp-ap-hours" class="m-input" value="57:30" placeholder="57:30" />
+          </div>
+        </div>
+
+        <div class="ap-calc-card" id="ap-calc-preview"></div>
+        <label style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:#1E293B; margin-bottom:10px; cursor:pointer;">
+          <input type="checkbox" id="chk-ap-leftover-saldo" />
+          Compensar els minuts sobrantes d'AP al saldo anual d'hores
+        </label>
+
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          Jornada diària teòrica de cada mes (format HH:MM, ex. <code>07:08</code>):
+        </p>
+        <div class="jornades-grid" id="jornades-grid"></div>
+      </div>
+      <div class="modal-footer-bar" style="justify-content:flex-end;">
+        <div class="footer-right-btns">
+          <button type="button" class="btn-cancel-modal" id="btn-cancel-jornades">Cancel·lar</button>
+          <button type="button" class="btn-save-modal" id="btn-save-jornades">Aplicar configuració</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Instruccions Instal·lació -->
+  <div class="modal-overlay" id="modal-pwa-help">
+    <div class="modal-card">
+      <div class="modal-dark-top">
+        <div>
+          <div class="modal-dow-sub">APLICACIÓ D'ESCRIPTORI I MÒBIL</div>
+          <div class="modal-date-big">Com instal·lar Control Horari</div>
+        </div>
+        <button type="button" class="modal-close-x" id="btn-close-pwa-help">✕</button>
+      </div>
+      <div class="modal-body-pad" style="font-size:12px; line-height:1.5;">
+        <p style="margin-bottom:10px; color:#334155;">
+          Per executar aquesta aplicació en finestra pròpia (sense barra de navegador) a <strong>Windows, Android o iOS</strong>:
+        </p>
+        <div style="background:#EFF6FF; border:1px solid #93C5FD; border-radius:8px; padding:9px 11px; margin-bottom:10px;">
+          <strong>1. Requisit imprescindible:</strong><br/>
+          Els navegadors no permeten instal·lar fitxers oberts directament des d'una carpeta (<code>file:///</code>). Cal obrir-la des d'una adreça web (<code>https://</code>) o un servidor local (<code>http://localhost</code>).
+        </div>
+        <div style="margin-bottom:8px;">
+          <strong>💻 Windows / Mac (Chrome o Edge):</strong><br/>
+          Prem la icona d'instal·lar a la dreta de la barra d'adreces o obre el menú <code>⋮</code> → <em>Desa i comparteix</em> → <em>Instal·la la pàgina com a aplicació</em>.
+        </div>
+        <div style="margin-bottom:8px;">
+          <strong>📱 Android (Chrome):</strong><br/>
+          Obre el menú <code>⋮</code> → <em>Instal·la l'aplicació</em> o <em>Afegeix a la pantalla d'inici</em>.
+        </div>
+        <div style="margin-bottom:12px;">
+          <strong>🍎 iPhone / iPad (Safari):</strong><br/>
+          Prem el botó <strong>Compartir</strong> (quadrat amb fletxa amunt) → <em>Afegeix a la pantalla d'inici</em>.
+        </div>
+
+        <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:8px 10px; font-size:11px; color:#475569;">
+          <strong>🐧 Nota per a Linux (Zorin OS / Mint / Ubuntu):</strong><br/>
+          Si l'obres en local amb Chrome, Brave o Edge, ves al menú <code>⋮</code> → <em>Desa i comparteix</em> → <em>Crea una drecera...</em> i marca la casella <strong>«Obre com a finestra»</strong> per tenir una icona directa al menú d'aplicacions.
+        </div>
+      </div>
+      <div class="modal-footer-bar" style="justify-content:flex-end;">
+        <button type="button" class="btn-save-modal" id="btn-ok-pwa-help">Entès</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      /* ============================================================
+         1. CONFIGURACIÓ PWA I SERVICE WORKER REAL
+         ============================================================ */
+      let deferredInstallPrompt = null;
+
+      function setupPWA() {
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <rect width="512" height="512" rx="112" fill="#1B2A4A"/>
+          <circle cx="256" cy="256" r="165" fill="none" stroke="#38BDF8" stroke-width="28"/>
+          <path d="M256 145v118l78 52" fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        const iconUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(iconSvg);
+        document.getElementById("pwa-apple-icon").href = iconUrl;
+
+        if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        }
+      }
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        const btn = document.getElementById("btn-install-pwa");
+        btn.textContent = "📲 Instal·lar Ara";
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        document.getElementById("btn-install-pwa").classList.add("hidden");
+        showToast("✅ Aplicació instal·lada correctament!");
+      });
+
+      setupPWA();
+
+      /* ============================================================
+         2. CONSTANTS, ESCAPE XSS I ESTAT GLOBAL UNIFICAT
+         ============================================================ */
+      const DB_NAME = "ControlHorariDB_V6";
+      const DB_VERSION = 1;
+      const STORE_NAME = "appData";
+
+      const DOW_NAMES = ["dg", "dl", "dt", "dc", "dj", "dv", "ds"];
+      const FULL_DOW_NAMES = ["DIUMENGE", "DILLUNS", "DIMARTS", "DIMECRES", "DIJOUS", "DIVENDRES", "DISSABTE"];
+      const FULL_MONTH_NAMES = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+
+      const MONTHS = [
+        { idx: 0, label: "GEN", full: "Gener", nextYear: false },
+        { idx: 1, label: "FEB", full: "Febrer", nextYear: false },
+        { idx: 2, label: "MAR", full: "Març", nextYear: false },
+        { idx: 3, label: "ABR", full: "Abril", nextYear: false },
+        { idx: 4, label: "MAI", full: "Maig", nextYear: false },
+        { idx: 5, label: "JUN", full: "Juny", nextYear: false },
+        { idx: 6, label: "JUL", full: "Juliol", nextYear: false },
+        { idx: 7, label: "AGO", full: "Agost", nextYear: false },
+        { idx: 8, label: "SET", full: "Setembre", nextYear: false },
+        { idx: 9, label: "OCT", full: "Octubre", nextYear: false },
+        { idx: 10, label: "NOV", full: "Novembre", nextYear: false },
+        { idx: 11, label: "DES", full: "Desembre", nextYear: false },
+        { idx: 0, label: "GEN", full: "Gener +1", nextYear: true }
+      ];
+
+      const BASE_DAY_TYPES = {
+        laborable:     { label: "Laborable",             short: "Laborable",       bg: "var(--c-laborable-bg)",    txt: "#0F172A",                  chartColor: "#94A3B8", isWorkingDay: true,  borsaKey: null,            inLegend: true, interactiveLegend: false },
+        cap_setmana:   { label: "Cap de setmana",        short: "Cap setmana",     bg: "var(--c-weekend-bg)",      txt: "#334155",                  chartColor: "#CBD5E1", isWorkingDay: false, borsaKey: null,            inLegend: true, interactiveLegend: false },
+        vacances:      { label: "Vacances",              short: "Vacances",        bg: "var(--c-vacances-bg)",     txt: "var(--c-vacances-txt)",    chartColor: "#16A34A", isWorkingDay: false, borsaKey: "vacances",      inLegend: true, interactiveLegend: true },
+        ap:            { label: "Assumptes Propis (AP)", short: "Assump. Propis",  bg: "var(--c-ap-bg)",           txt: "var(--c-ap-txt)",          chartColor: "#FACC15", isWorkingDay: false, borsaKey: "ap",            inLegend: true, interactiveLegend: true },
+        antiguitat:    { label: "Dies per Antiguitat",   short: "Antiguitat",      bg: "var(--c-antiguitat-bg)",   txt: "var(--c-antiguitat-txt)",  chartColor: "#4F46E5", isWorkingDay: false, borsaKey: "antiguitat",    inLegend: true, interactiveLegend: true },
+        trienni:       { label: "Dies per Trienni",      short: "Trienni",         bg: "var(--c-trienni-bg)",      txt: "var(--c-trienni-txt)",     chartColor: "#C026D3", isWorkingDay: false, borsaKey: "trienni",       inLegend: true, interactiveLegend: true },
+        festiu_nac:    { label: "Festiu Nacional",       short: "Fest. Nacional",  bg: "var(--c-festiu-nac-bg)",   txt: "var(--c-festiu-nac-txt)",  chartColor: "#DC2626", isWorkingDay: false, borsaKey: null,            inLegend: true, interactiveLegend: true },
+        festiu_aut:    { label: "Festiu Autonòmic",      short: "Fest. Autonòmic", bg: "var(--c-festiu-aut-bg)",   txt: "var(--c-festiu-aut-txt)",  chartColor: "#EA580C", isWorkingDay: false, borsaKey: null,            inLegend: true, interactiveLegend: true },
+        festiu_loc:    { label: "Festiu Local",          short: "Fest. Local",     bg: "var(--c-festiu-loc-bg)",   txt: "var(--c-festiu-loc-txt)",  chartColor: "#0284C7", isWorkingDay: false, borsaKey: null,            inLegend: true, interactiveLegend: true },
+        festiu_norec:  { label: "Festiu No Recuperable", short: "Fest. No Recup.", bg: "var(--c-festiu-norec-bg)", txt: "var(--c-festiu-norec-txt)",chartColor: "#9333EA", isWorkingDay: false, borsaKey: "festiu_norec",  inLegend: true, interactiveLegend: true },
+        setmana_santa: { label: "Setmana Santa",         short: "Setmana Santa",   bg: "var(--c-ss-bg)",           txt: "var(--c-ss-txt)",          chartColor: "#0D9488", isWorkingDay: false, borsaKey: "setmana_santa", inLegend: true, interactiveLegend: true },
+        nadal:         { label: "Nadal",                 short: "Nadal",           bg: "var(--c-nadal-bg)",        txt: "var(--c-nadal-txt)",       chartColor: "#E11D48", isWorkingDay: false, borsaKey: "nadal",         inLegend: true, interactiveLegend: true },
+        cap:           { label: "Visita Mèdica / CAP",   short: "Visita CAP",      bg: "var(--c-cap-bg)",          txt: "var(--c-cap-txt)",         chartColor: "#06B6D4", isWorkingDay: true,  borsaKey: null,            inLegend: true, interactiveLegend: true },
+        formacio:      { label: "Formació / Permís",     short: "Formació",        bg: "var(--c-formacio-bg)",     txt: "var(--c-formacio-txt)",    chartColor: "#F59E0B", isWorkingDay: true,  borsaKey: null,            inLegend: true, interactiveLegend: true },
+        altres:        { label: "Altres",                short: "Altres",          bg: "var(--c-altres-bg)",       txt: "var(--c-altres-txt)",      chartColor: "#475569", isWorkingDay: false, borsaKey: "altres",        inLegend: true, interactiveLegend: true }
+      };
+
+      const BASE_BORSA_ITEMS = [
+        { key: "vacances",      label: "Vacances Anuals",      color: "var(--c-vacances-bg)",     defaultDies: 22 },
+        { key: "ap",            label: "Assumptes Propis",     color: "var(--c-ap-bg)",           defaultDies: 8 },
+        { key: "antiguitat",    label: "Dies per antiguitat",  color: "var(--c-antiguitat-bg)",   defaultDies: 0 },
+        { key: "trienni",       label: "Dies per trienni",     color: "var(--c-trienni-bg)",      defaultDies: 0 },
+        { key: "festiu_norec",  label: "Festius No Recup.",    color: "var(--c-festiu-norec-bg)", defaultDies: 2 },
+        { key: "setmana_santa", label: "Setmana Santa",        color: "var(--c-ss-bg)",           defaultDies: 3 },
+        { key: "nadal",         label: "Dies Nadal",           color: "var(--c-nadal-bg)",        defaultDies: 3 },
+        { key: "altres",        label: "Altres",               color: "var(--c-altres-bg)",       defaultDies: 0 }
+      ];
+
+      let db = null;
+      // state.days es un almacen global unico por fecha YYYY-MM-DD (evita desincronizacion entre GEN +1 y el año siguiente)
+      let state = { years: {}, days: {}, customTypes: [], auditLog: [], lastBackupTs: Date.now(), changesSinceBackup: 0 };
+      let undoStack = [];
+      let isEditMode = false;
+      let highlightedType = null;
+      let toastTimeout = null;
+      const isMobileScreen = () => window.innerWidth <= 768;
+      let activeView = isMobileScreen() ? "monthly" : "annual";
+      let mobileTab = isMobileScreen() ? "monthly" : "annual";
+      let activeMonthCol = new Date().getMonth();
+      let currentYear = new Date().getFullYear();
+      let blockStartYear = Math.floor(currentYear / 5) * 5;
+      let activeEditDate = null;
+      let activeMonthTeoStr = "07:08";
+
+      function escapeHTML(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function logAudit(action, detail) {
+        if (!Array.isArray(state.auditLog)) state.auditLog = [];
+        state.auditLog.unshift({
+          ts: new Date().toLocaleString("ca-ES"),
+          action,
+          detail
+        });
+        if (state.auditLog.length > 250) state.auditLog.length = 250;
+      }
+
+      function getAllDayTypes() {
+        const merged = { ...BASE_DAY_TYPES };
+        (state.customTypes || []).forEach(ct => {
+          const qMode = ct.quotaMode || (ct.hasBorsa ? "annual" : "none");
+          merged[ct.key] = {
+            label: ct.label,
+            short: ct.short || ct.label,
+            bg: ct.bg,
+            txt: ct.txt,
+            chartColor: ct.bg,
+            isWorkingDay: Boolean(ct.isWorkingDay),
+            quotaMode: qMode,
+            quotaVal: Number(ct.quotaVal ?? ct.defaultDies) || 0,
+            borsaKey: qMode === "annual" ? ct.key : null,
+            inLegend: true,
+            interactiveLegend: true,
+            isCustom: true
+          };
+        });
+        return merged;
+      }
+
+      function getAllBorsaItems() {
+        const list = [...BASE_BORSA_ITEMS];
+        (state.customTypes || []).forEach(ct => {
+          const qMode = ct.quotaMode || (ct.hasBorsa ? "annual" : "none");
+          if (qMode === "annual") {
+            list.push({
+              key: ct.key,
+              label: ct.label,
+              color: ct.bg,
+              defaultDies: Number(ct.quotaVal ?? ct.defaultDies) || 0,
+              isCustom: true
+            });
+          }
+        });
+        return list;
+      }
+
+      function getWeeklyTypeCount(dKey, typeKey, excludeDateKey = null) {
+        const [y, m, d] = dKey.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        const dayOffset = (dt.getDay() + 6) % 7;
+        const monday = new Date(y, m - 1, d - dayOffset);
+
+        let count = 0;
+        for (let i = 0; i < 7; i++) {
+          const cur = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+          const curKey = dateKey(cur.getFullYear(), cur.getMonth(), cur.getDate());
+          if (curKey === excludeDateKey) continue;
+          const rec = getDayRecord(cur.getFullYear(), cur.getMonth(), cur.getDate());
+          if (rec.type === typeKey) count++;
+        }
+        return count;
+      }
+
+      function getTodayKey() {
+        const now = new Date();
+        return dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+      }
+
+      function showToast(message) {
+        const el = document.getElementById("toast-banner");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          el.classList.remove("show");
+        }, 3400);
+      }
+
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = (e) => {
+            const database = e.target.result;
+            if (!database.objectStoreNames.contains(STORE_NAME)) {
+              database.createObjectStore(STORE_NAME);
+            }
+          };
+          request.onsuccess = (e) => resolve(e.target.result);
+          request.onerror = (e) => reject(e.target.error);
+        });
+      }
+
+      function idbGet(key) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const req = tx.objectStore(STORE_NAME).get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function idbSet(key, val) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          const req = tx.objectStore(STORE_NAME).put(val, key);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function pushUndoSnapshot() {
+        undoStack.push(JSON.stringify(state));
+        if (undoStack.length > 25) undoStack.shift();
+        updateUndoUI();
+      }
+
+      function updateUndoUI() {
+        const btn = document.getElementById("btn-undo");
+        const cnt = document.getElementById("undo-count");
+        const controls = document.getElementById("top-right-controls");
+        const hasUndo = undoStack.length > 0 && isEditMode;
+        cnt.textContent = undoStack.length;
+        btn.classList.toggle("hidden", !hasUndo);
+        controls.classList.toggle("has-undo", hasUndo);
+      }
+
+      async function saveState(incrementChanges = true) {
+        const badge = document.getElementById("db-status-badge");
+        try {
+          if (incrementChanges) {
+            state.changesSinceBackup = (state.changesSinceBackup || 0) + 1;
+          }
+          await idbSet("mainState", state);
+          badge.textContent = "IndexedDB ✓";
+        } catch (err) {
+          badge.textContent = "Error desant";
+        }
+      }
+
+      function isValidHHMM(str, allowZero = true, maxHours = 23) {
+        if (typeof str !== "string") return false;
+        const m = str.trim().match(/^(\d{1,3}):([0-5]\d)$/);
+        if (!m) return false;
+        const h = Number(m[1]);
+        const mins = Number(m[2]);
+        if (h > maxHours) return false;
+        if (!allowZero && h === 0 && mins === 0) return false;
+        return true;
+      }
+
+      function normalizeHHMM(str, fallback = "07:08") {
+        if (!isValidHHMM(str, true, 999)) return fallback;
+        const [h, m] = str.trim().split(":");
+        return `${String(Number(h)).padStart(2, "0")}:${m}`;
+      }
+
+      function toMins(hhmm) {
+        if (!hhmm || !hhmm.includes(":")) return 0;
+        const [h, m] = hhmm.split(":").map(Number);
+        return (h || 0) * 60 + (m || 0);
+      }
+
+      function toHHMM(mins, signed = false) {
+        const sign = mins < 0 ? "-" : (signed && mins > 0 ? "+" : "");
+        const abs = Math.abs(Math.round(mins));
+        const h = Math.floor(abs / 60);
+        const m = abs % 60;
+        return `${sign}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+
+      function validateAndSanitizeImportedData(rawObj) {
+        if (!rawObj || typeof rawObj !== "object" || !rawObj.years || typeof rawObj.years !== "object") {
+          throw new Error("El fitxer no conté l'estructura d'anys esperada.");
+        }
+        const yearKeys = Object.keys(rawObj.years).filter(k => /^\d{4}$/.test(k));
+        if (yearKeys.length === 0) {
+          throw new Error("No s'ha trobat cap any vàlid dins del fitxer JSON.");
+        }
+
+        const cleanCustomTypes = [];
+        if (Array.isArray(rawObj.customTypes)) {
+          rawObj.customTypes.forEach(ct => {
+            if (ct && typeof ct.key === "string" && typeof ct.label === "string") {
+              const qMode = ["none", "annual", "weekly"].includes(ct.quotaMode)
+                ? ct.quotaMode
+                : (ct.hasBorsa ? "annual" : "none");
+              cleanCustomTypes.push({
+                key: ct.key,
+                label: ct.label.slice(0, 30),
+                short: (ct.short || ct.label).slice(0, 15),
+                bg: /^#[0-9A-Fa-f]{6}$/.test(ct.bg) ? ct.bg : "#0284C7",
+                txt: /^#[0-9A-Fa-f]{6}$/.test(ct.txt) ? ct.txt : "#FFFFFF",
+                isWorkingDay: Boolean(ct.isWorkingDay),
+                quotaMode: qMode,
+                quotaVal: Math.max(0, Math.min(60, Number(ct.quotaVal ?? ct.defaultDies) || 0))
+              });
+            }
+          });
+        }
+
+        const validTypeKeys = new Set([...Object.keys(BASE_DAY_TYPES), ...cleanCustomTypes.map(c => c.key)]);
+        const mergedGlobalDays = {};
+
+        const sanitizeDayEntry = (dKey, dVal) => {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dKey) || !dVal || typeof dVal !== "object") return;
+          const type = validTypeKeys.has(dVal.type) ? dVal.type : "laborable";
+          const note = typeof dVal.note === "string" ? dVal.note.slice(0, 80) : "";
+          const extraMins = Math.max(0, Math.min(720, Number(dVal.extraMins) || 0));
+          const customTeoMins = (dVal.customTeoMins !== null && dVal.customTeoMins !== undefined)
+            ? Math.max(0, Math.min(1440, Number(dVal.customTeoMins)))
+            : null;
+
+          const punches = [];
+          if (Array.isArray(dVal.punches)) {
+            dVal.punches.forEach(p => {
+              if (p && isValidHHMM(p.in, true, 23) && isValidHHMM(p.out, true, 23)) {
+                if (toMins(p.out) > toMins(p.in)) {
+                  punches.push({ in: normalizeHHMM(p.in), out: normalizeHHMM(p.out) });
+                }
+              }
+            });
+          }
+          mergedGlobalDays[dKey] = { type, note, punches, extraMins, customTeoMins };
+        };
+
+        // Migrar dias desde estructura antigua (por año) y nueva (global state.days)
+        yearKeys.forEach(yk => {
+          const srcY = rawObj.years[yk];
+          if (srcY && srcY.days && typeof srcY.days === "object") {
+            Object.entries(srcY.days).forEach(([dKey, dVal]) => sanitizeDayEntry(dKey, dVal));
+          }
+        });
+        if (rawObj.days && typeof rawObj.days === "object") {
+          Object.entries(rawObj.days).forEach(([dKey, dVal]) => sanitizeDayEntry(dKey, dVal));
+        }
+
+        const cleanState = {
+          years: {},
+          days: mergedGlobalDays,
+          customTypes: cleanCustomTypes,
+          auditLog: Array.isArray(rawObj.auditLog) ? rawObj.auditLog.slice(0, 250) : [],
+          lastBackupTs: Date.now(),
+          changesSinceBackup: 0
+        };
+
+        yearKeys.forEach(yk => {
+          const srcY = rawObj.years[yk];
+          if (!srcY || typeof srcY !== "object") return;
+
+          const conveniHours = Math.min(2500, Math.max(100, Number(srcY.conveniHours) || 1668));
+          const apHours = isValidHHMM(srcY.apHours, true, 500) ? normalizeHHMM(srcY.apHours, "57:30") : "57:30";
+          const addApLeftover = Boolean(srcY.addApLeftover);
+          const municipi = typeof srcY.municipi === "string" ? srcY.municipi : "terrassa";
+
+          const jornades = Array.isArray(srcY.jornades) && srcY.jornades.length === 13
+            ? srcY.jornades.map(j => normalizeHHMM(j, "07:08"))
+            : Array(13).fill("07:08");
+
+          const cleanBorsa = {};
+          const allBorsaKeys = [
+            ...BASE_BORSA_ITEMS,
+            ...cleanCustomTypes.filter(c => c.quotaMode === "annual").map(c => ({ key: c.key, defaultDies: c.quotaVal }))
+          ];
+          allBorsaKeys.forEach(item => {
+            const srcB = srcY.borsa && srcY.borsa[item.key] ? srcY.borsa[item.key] : {};
+            cleanBorsa[item.key] = {
+              total: Math.max(0, Math.min(100, Number(srcB.total ?? item.defaultDies) || 0)),
+              solManual: Math.max(0, Math.min(100, Number(srcB.solManual ?? srcB.demanatsManual ?? 0) || 0)),
+              conManual: Math.max(0, Math.min(100, Number(srcB.conManual ?? srcB.gauditsManual ?? 0) || 0))
+            };
+          });
+
+          cleanState.years[yk] = { conveniHours, apHours, addApLeftover, municipi, jornades, borsa: cleanBorsa };
+        });
+
+        return cleanState;
+      }
+
+      async function initStorage() {
+        db = await openDatabase();
+        const savedState = await idbGet("mainState");
+
+        if (savedState && savedState.years) {
+          state = validateAndSanitizeImportedData(savedState);
+        }
+      }
+
+      // Usa la media real de los 12 meses del año para calcular los días de AP (57:30h)
+      function computeAPDaysFromHours(apHoursStr, jornadesArr) {
+        const apMins = toMins(apHoursStr || "57:30");
+        const year12 = (jornadesArr || []).slice(0, 12).map(j => toMins(j || "07:08")).filter(m => m > 0);
+        const avgDayMins = year12.length > 0
+          ? Math.round(year12.reduce((a, b) => a + b, 0) / year12.length)
+          : 428;
+        const exactDays = apMins / avgDayMins;
+        return {
+          apMins,
+          baseDayMins: avgDayMins,
+          exactDays,
+          roundedDays: Math.floor(exactDays),
+          leftoverMins: apMins % avgDayMins
+        };
+      }
+
+      function getEasterSunday(year) {
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month, day);
+      }
+
+      function dateKey(y, m, d) {
+        return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+
+      function getMunicipalHolidays(year, municipi) {
+        const res = [];
+        const easter = getEasterSunday(year);
+        const pentecostMonday = new Date(easter);
+        pentecostMonday.setDate(easter.getDate() + 50);
+
+        if (municipi === "terrassa") {
+          res.push({ m: pentecostMonday.getMonth(), d: pentecostMonday.getDate(), name: "SEGONA PASQUA" });
+          const july1 = new Date(year, 6, 1);
+          const firstSundayJuly = 1 + ((7 - july1.getDay()) % 7);
+          res.push({ m: 6, d: firstSundayJuly + 1, name: "FESTA MAJOR" });
+        } else if (municipi === "barcelona") {
+          res.push({ m: pentecostMonday.getMonth(), d: pentecostMonday.getDate(), name: "SEGONA PASQUA" });
+          res.push({ m: 8, d: 24, name: "LA MERCÈ" });
+        } else if (municipi === "sabadell") {
+          const may1 = new Date(year, 4, 1);
+          const firstSunMay = 1 + ((7 - may1.getDay()) % 7);
+          res.push({ m: 4, d: firstSunMay + 8, name: "APLEC SALUT" });
+          const sep1 = new Date(year, 8, 1);
+          const firstMonSep = 1 + ((8 - sep1.getDay()) % 7);
+          res.push({ m: 8, d: firstMonSep, name: "FESTA MAJOR" });
+        } else if (municipi === "girona") {
+          res.push({ m: 6, d: 25, name: "SANT JAUME" });
+          res.push({ m: 9, d: 29, name: "SANT NARCÍS" });
+        } else if (municipi === "lleida") {
+          res.push({ m: 4, d: 11, name: "ST. ANASTASI" });
+          res.push({ m: 8, d: 29, name: "SANT MIQUEL" });
+        } else if (municipi === "tarragona") {
+          res.push({ m: 7, d: 19, name: "SANT MAGÍ" });
+          res.push({ m: 8, d: 23, name: "SANTA TECLA" });
+        }
+        return res;
+      }
+
+      function buildAutoHolidays(year, municipi = "terrassa") {
+        const map = {};
+        const easter = getEasterSunday(year);
+        const goodFriday = new Date(easter);
+        goodFriday.setDate(easter.getDate() - 2);
+        const easterMonday = new Date(easter);
+        easterMonday.setDate(easter.getDate() + 1);
+
+        const fixed = [
+          { m: 0, d: 1, type: "festiu_nac", name: "CAP D'ANY" },
+          { m: 0, d: 6, type: "festiu_nac", name: "REIS" },
+          { m: 4, d: 1, type: "festiu_nac", name: "FESTA TREBALL" },
+          { m: 5, d: 24, type: "festiu_aut", name: "SANT JOAN" },
+          { m: 7, d: 15, type: "festiu_nac", name: "L'ASSUMPCIÓ" },
+          { m: 8, d: 11, type: "festiu_aut", name: "DIADA CAT." },
+          { m: 9, d: 12, type: "festiu_nac", name: "FESTA NACIONAL" },
+          { m: 10, d: 1, type: "festiu_nac", name: "TOTS SANTS" },
+          { m: 11, d: 6, type: "festiu_nac", name: "CONSTITUCIÓ" },
+          { m: 11, d: 8, type: "festiu_nac", name: "IMMACULADA" },
+          { m: 11, d: 25, type: "festiu_nac", name: "NADAL" },
+          { m: 11, d: 26, type: "festiu_aut", name: "SANT ESTEVE" }
+        ];
+
+        fixed.forEach(h => {
+          map[dateKey(year, h.m, h.d)] = { type: h.type, note: h.name, punches: [], extraMins: 0 };
+        });
+
+        map[dateKey(goodFriday.getFullYear(), goodFriday.getMonth(), goodFriday.getDate())] = {
+          type: "festiu_nac",
+          note: "DIVENDRES SANT",
+          punches: [],
+          extraMins: 0
+        };
+
+        map[dateKey(easterMonday.getFullYear(), easterMonday.getMonth(), easterMonday.getDate())] = {
+          type: "festiu_aut",
+          note: "DILLUNS PASQUA",
+          punches: [],
+          extraMins: 0
+        };
+
+        const locals = getMunicipalHolidays(year, municipi);
+        locals.forEach(loc => {
+          map[dateKey(year, loc.m, loc.d)] = { type: "festiu_loc", note: loc.name, punches: [], extraMins: 0 };
+        });
+
+        return map;
+      }
+
+      function ensureHolidaysForYear(year, municipi) {
+        const autoMap = buildAutoHolidays(year, municipi);
+        Object.entries(autoMap).forEach(([k, val]) => {
+          if (!state.days[k]) {
+            state.days[k] = val;
+          }
+        });
+      }
+
+      function applyMunicipiToYear(year, municipi) {
+        [year, year + 1].forEach(y => {
+          Object.entries(state.days).forEach(([k, info]) => {
+            if (k.startsWith(`${y}-`) && info.type === "festiu_loc" && (!info.punches || info.punches.length === 0)) {
+              delete state.days[k];
+            }
+          });
+          const locals = getMunicipalHolidays(y, municipi);
+          locals.forEach(loc => {
+            const k = dateKey(y, loc.m, loc.d);
+            if (!state.days[k]) {
+              state.days[k] = { type: "festiu_loc", note: loc.name, punches: [], extraMins: 0 };
+            }
+          });
+        });
+      }
+
+      function getYearStore(year) {
+        if (!state.years[year]) {
+          const municipi = "terrassa";
+          const jornades = Array(13).fill("07:08");
+          const apHours = "57:30";
+          const apCalc = computeAPDaysFromHours(apHours, jornades);
+
+          ensureHolidaysForYear(year, municipi);
+          ensureHolidaysForYear(year + 1, municipi);
+
+          const borsa = {};
+          getAllBorsaItems().forEach(item => {
+            const defVal = item.key === "ap" ? apCalc.roundedDays : item.defaultDies;
+            borsa[item.key] = { total: defVal, solManual: 0, conManual: 0 };
+          });
+          state.years[year] = {
+            conveniHours: 1668,
+            apHours,
+            addApLeftover: false,
+            municipi,
+            jornades,
+            borsa
+          };
+          saveState(false);
+        } else {
+          // Garantir festius carregats si l'any es va crear buit
+          ensureHolidaysForYear(year, state.years[year].municipi || "terrassa");
+          ensureHolidaysForYear(year + 1, state.years[year].municipi || "terrassa");
+        }
+        if (state.years[year].conveniHours === undefined) state.years[year].conveniHours = 1668;
+        if (!state.years[year].apHours) state.years[year].apHours = "57:30";
+        if (!state.years[year].municipi) state.years[year].municipi = "terrassa";
+        return state.years[year];
+      }
+
+      function getDayRecord(y, m, d) {
+        const k = dateKey(y, m, d);
+        const dt = new Date(y, m, d);
+        const dow = dt.getDay();
+        const isWeekend = dow === 0 || dow === 6;
+
+        if (state.days[k]) {
+          return { key: k, dow, isWeekend, ...state.days[k] };
+        }
+        return {
+          key: k,
+          dow,
+          isWeekend,
+          type: isWeekend ? "cap_setmana" : "laborable",
+          note: "",
+          punches: [],
+          extraMins: 0,
+          customTeoMins: null
+        };
+      }
+
+      function computeDayPunches(rec) {
+        let punchMins = 0;
+        (rec.punches || []).forEach(p => {
+          if (p.in && p.out) {
+            const diff = toMins(p.out) - toMins(p.in);
+            if (diff > 0) punchMins += diff;
+          }
+        });
+        const extra = Number(rec.extraMins) || 0;
+        const total = punchMins + extra;
+        return { workedMins: total, hasRealEntry: total > 0 };
+      }
+
+      function computeYearMetrics(yStore) {
+        const allTypes = getAllDayTypes();
+        const todayStr = getTodayKey();
+
+        let projLoggedDays = 0;
+        let projLoggedDeltaMins = 0;
+
+        const monthStats = MONTHS.map((m, colIdx) => {
+          const targetY = m.nextYear ? currentYear + 1 : currentYear;
+          const daysInMonth = new Date(targetY, m.idx + 1, 0).getDate();
+          const defaultMonthTeoMins = toMins(yStore.jornades[colIdx] || "07:08");
+
+          let teoMonthMins = 0;
+          let workingDaysCount = 0;
+          let realWorkedMins = 0;
+          let loggedWorkingDays = 0;
+          let loggedTeoMins = 0;
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const rec = getDayRecord(targetY, m.idx, d);
+            const typeMeta = allTypes[rec.type] || allTypes.laborable;
+            const teoMins = rec.customTeoMins !== undefined && rec.customTeoMins !== null
+              ? Number(rec.customTeoMins)
+              : defaultMonthTeoMins;
+
+            if (typeMeta.isWorkingDay) {
+              teoMonthMins += teoMins;
+              workingDaysCount += 1;
+            }
+
+            const { workedMins, hasRealEntry } = computeDayPunches(rec);
+            if (hasRealEntry) {
+              realWorkedMins += workedMins;
+              if (typeMeta.isWorkingDay) {
+                loggedWorkingDays += 1;
+                loggedTeoMins += teoMins;
+
+                // Excluir el dia de hoy de la proyeccion si aun no se ha cumplido al menos el 50% de la jornada
+                if (!m.nextYear) {
+                  const isIncompleteToday = rec.key === todayStr && workedMins < (teoMins * 0.5);
+                  if (!isIncompleteToday) {
+                    projLoggedDays += 1;
+                    projLoggedDeltaMins += (workedMins - teoMins);
+                  }
+                }
+              }
+            }
+          }
+
+          return {
+            teoMonthMins,
+            workingDaysCount,
+            realWorkedMins,
+            loggedWorkingDays,
+            loggedTeoMins
+          };
+        });
+
+        const year12 = monthStats.slice(0, 12);
+        const totalCalTeoMins = year12.reduce((a, b) => a + b.teoMonthMins, 0);
+        const totalCalWorkingDays = year12.reduce((a, b) => a + b.workingDaysCount, 0);
+        const totalRealWorkedMins = year12.reduce((a, b) => a + b.realWorkedMins, 0);
+        const totalLoggedDays = year12.reduce((a, b) => a + b.loggedWorkingDays, 0);
+        const totalLoggedTeoMins = year12.reduce((a, b) => a + b.loggedTeoMins, 0);
+
+        const apCalc = computeAPDaysFromHours(yStore.apHours, yStore.jornades);
+        const apBonusMins = yStore.addApLeftover ? apCalc.leftoverMins : 0;
+
+        const currentLoggedSaldo = (totalRealWorkedMins - totalLoggedTeoMins) + apBonusMins;
+
+        const remainingWorkingDays = Math.max(0, totalCalWorkingDays - totalLoggedDays);
+        let projectedEndYearSaldo = currentLoggedSaldo;
+        if (projLoggedDays > 0) {
+          const avgDailyDelta = projLoggedDeltaMins / projLoggedDays;
+          projectedEndYearSaldo = currentLoggedSaldo + (avgDailyDelta * remainingWorkingDays);
+        }
+
+        return {
+          monthStats,
+          totalCalTeoMins,
+          totalCalWorkingDays,
+          totalRealWorkedMins,
+          totalLoggedDays,
+          projLoggedDays,
+          currentLoggedSaldo,
+          remainingWorkingDays,
+          projectedEndYearSaldo
+        };
+      }
+
+      function toggleHighlightType(typeKey) {
+        const allTypes = getAllDayTypes();
+        const cfg = allTypes[typeKey];
+        if (!cfg || !cfg.interactiveLegend) return;
+
+        if (highlightedType === typeKey) {
+          highlightedType = null;
+          renderApp();
+          return;
+        }
+
+        let matchCount = 0;
+        MONTHS.forEach(m => {
+          const targetY = m.nextYear ? currentYear + 1 : currentYear;
+          const dim = new Date(targetY, m.idx + 1, 0).getDate();
+          for (let d = 1; d <= dim; d++) {
+            const rec = getDayRecord(targetY, m.idx, d);
+            if (rec.type === typeKey) matchCount++;
+          }
+        });
+
+        if (matchCount === 0) {
+          highlightedType = null;
+          renderApp();
+          showToast(`ℹ️ No hi ha cap dia de «${cfg.label}» registrat al calendari de ${currentYear}.`);
+          return;
+        }
+
+        highlightedType = typeKey;
+
+        if (isMobileScreen() && mobileTab === "summary") {
+          mobileTab = activeView === "annual" ? "annual" : "monthly";
+          activeView = mobileTab;
+        }
+
+        renderApp();
+        showToast(`✨ Ressaltant ${matchCount} ${matchCount === 1 ? "dia" : "dies"} de «${cfg.label}»`);
+      }
+
+      function applyModeUI() {
+        const toggleBtn = document.getElementById("btn-toggle-mode");
+        const btnJornades = document.getElementById("btn-open-jornades");
+        const btnCustomTypes = document.getElementById("btn-open-custom-types");
+        const lblImport = document.getElementById("lbl-import-json");
+        const inpImport = document.getElementById("input-import-json");
+        const badgeBorsa = document.getElementById("badge-borsa-status");
+        const selMunicipi = document.getElementById("sel-municipi");
+        const conveniBox = document.getElementById("kpi-conveni-box");
+        const lblConveniTitle = document.getElementById("lbl-conveni-title");
+        const lblCalSub = document.getElementById("lbl-cal-sub");
+
+        selMunicipi.disabled = !isEditMode;
+
+        if (isEditMode) {
+          document.body.classList.remove("readonly-mode");
+          toggleBtn.className = "btn-mode-toggle is-editing";
+          toggleBtn.textContent = "🔓 Mode Edició";
+          btnJornades.disabled = false;
+          btnCustomTypes.disabled = false;
+          inpImport.disabled = false;
+          lblImport.style.opacity = "1";
+          lblImport.style.pointerEvents = "auto";
+          badgeBorsa.textContent = "Editable";
+          conveniBox.style.cursor = "pointer";
+          lblConveniTitle.textContent = "Hores Conveni Anual ✎";
+          lblCalSub.textContent = "· Clica la jornada de cada mes o qualsevol dia per fitxar";
+        } else {
+          document.body.classList.add("readonly-mode");
+          toggleBtn.className = "btn-mode-toggle is-readonly";
+          toggleBtn.textContent = "🔒 Visualització";
+          btnJornades.disabled = true;
+          btnCustomTypes.disabled = true;
+          inpImport.disabled = true;
+          lblImport.style.opacity = "0.5";
+          lblImport.style.pointerEvents = "none";
+          badgeBorsa.textContent = "Només lectura";
+          conveniBox.style.cursor = "default";
+          lblConveniTitle.textContent = "Hores Conveni Anual";
+          lblCalSub.textContent = "· Clica un dia per consultar o prem la llegenda per ressaltar";
+        }
+        updateUndoUI();
+      }
+
+      function renderYearNav() {
+        const nav = document.getElementById("year-nav");
+        nav.innerHTML = "";
+
+        const btnPrev = document.createElement("button");
+        btnPrev.className = "btn-yr";
+        btnPrev.textContent = "« -5a";
+        btnPrev.dataset.navBlock = "-5";
+        nav.appendChild(btnPrev);
+
+        for (let y = blockStartYear; y < blockStartYear + 5; y++) {
+          const btn = document.createElement("button");
+          btn.className = `btn-yr ${y === currentYear ? "active" : ""}`;
+          btn.textContent = y;
+          btn.dataset.selectYear = y;
+          nav.appendChild(btn);
+        }
+
+        const btnNext = document.createElement("button");
+        btnNext.className = "btn-yr";
+        btnNext.textContent = "+5a »";
+        btnNext.dataset.navBlock = "5";
+        nav.appendChild(btnNext);
+      }
+
+      function renderApp() {
+        const yStore = getYearStore(currentYear);
+        applyModeUI();
+        renderYearNav();
+
+        document.body.classList.toggle("has-highlight-filter", Boolean(highlightedType));
+        document.getElementById("btn-clear-highlight").classList.toggle("hidden", !highlightedType);
+
+        document.getElementById("sel-municipi").value = yStore.municipi || "terrassa";
+
+        document.querySelectorAll(".view-tab").forEach(tab => {
+          tab.classList.toggle("active", tab.dataset.view === activeView);
+        });
+        document.querySelectorAll(".mob-nav-btn").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.mobTab === mobileTab);
+        });
+        document.body.classList.toggle("mobile-show-summary", mobileTab === "summary");
+
+        document.getElementById("view-annual").classList.toggle("hidden", activeView !== "annual");
+        document.getElementById("view-monthly").classList.toggle("hidden", activeView !== "monthly");
+        document.getElementById("view-charts").classList.toggle("hidden", activeView !== "charts");
+        document.getElementById("view-history").classList.toggle("hidden", activeView !== "history");
+
+        const metrics = computeYearMetrics(yStore);
+
+        const conveniMins = (Number(yStore.conveniHours) || 1668) * 60;
+        const difConveniMins = metrics.totalCalTeoMins - conveniMins;
+
+        document.getElementById("lbl-kpi-year").textContent = currentYear;
+        document.getElementById("badge-worked-days").textContent = `${metrics.totalCalWorkingDays} dies lab.`;
+        document.getElementById("kpi-conveni").textContent = `${toHHMM(conveniMins)} h`;
+        document.getElementById("kpi-calendari-teo").textContent = `${toHHMM(metrics.totalCalTeoMins)} h`;
+        document.getElementById("kpi-dif-conveni").textContent = `Excedent: ${toHHMM(difConveniMins, true)} h`;
+        document.getElementById("kpi-teoric-fitxat").textContent = `${toHHMM(metrics.totalRealWorkedMins)} h`;
+        document.getElementById("kpi-reals").textContent = `${toHHMM(Math.max(0, metrics.totalCalTeoMins - metrics.totalRealWorkedMins))} h`;
+
+        const saldoBanner = document.getElementById("saldo-banner");
+        const kpiSaldo = document.getElementById("kpi-saldo");
+        kpiSaldo.textContent = `${toHHMM(metrics.currentLoggedSaldo, true)} h`;
+        saldoBanner.className = `saldo-banner ${metrics.currentLoggedSaldo < 0 ? "neg" : ""}`;
+
+        const projValEl = document.getElementById("proj-val");
+        const projSubEl = document.getElementById("proj-subtext");
+        if (metrics.projLoggedDays === 0) {
+          projValEl.textContent = "Sense dades";
+          projValEl.style.color = "#64748B";
+          projSubEl.textContent = "Completa almenys un dia per calcular tendència";
+        } else {
+          projValEl.textContent = `${toHHMM(metrics.projectedEndYearSaldo, true)} h`;
+          projValEl.style.color = metrics.projectedEndYearSaldo >= 0 ? "#15803D" : "#DC2626";
+          projSubEl.textContent = `Basat en ${metrics.projLoggedDays} dies complets (${metrics.remainingWorkingDays} pend.)`;
+        }
+
+        updateTopBanner();
+
+        if (activeView === "annual") renderAnnualView(yStore, metrics);
+        if (activeView === "monthly") renderMonthlyView(yStore, metrics);
+        if (activeView === "charts") renderChartsView(metrics);
+        if (activeView === "history") renderHistoryView();
+
+        renderBorsa(yStore);
+        renderLegend();
+      }
+
+      function updateTopBanner() {
+        const banner = document.getElementById("local-banner");
+        const msg = document.getElementById("local-banner-msg");
+        const hint = document.getElementById("local-banner-hint");
+
+        if (!isEditMode) {
+          banner.className = "local-banner readonly-info";
+          msg.textContent = "🔒 Mode Visualització: el calendari està protegit contra canvis accidentals.";
+          hint.textContent = "Prem «🔒 Visualització» per editar";
+          return;
+        }
+
+        if ((state.changesSinceBackup || 0) >= 15) {
+          banner.className = "local-banner backup-warn";
+          msg.textContent = `⚠ Has fet ${state.changesSinceBackup} canvis des de l'últim Backup JSON.`;
+          hint.textContent = "Prem «💾 Backup»";
+          return;
+        }
+
+        const municipiName = document.getElementById("sel-municipi").selectedOptions[0]?.text.split("(")[0].trim() || "Terrassa";
+        banner.className = "local-banner complete";
+        msg.textContent = `✓ Calendari ${currentYear} (${municipiName}) carregat.`;
+        hint.textContent = "Clica qualsevol dia per fitxar";
+      }
+
+      /* 1. VISTA ANUAL */
+      function renderAnnualView(yStore, metrics) {
+        const nextYearShort = String(currentYear + 1).slice(-2);
+        document.getElementById("lbl-cal-years").textContent = `${currentYear} + Gen. '${nextYearShort}`;
+        const todayStr = getTodayKey();
+        const allTypes = getAllDayTypes();
+
+        const trMonths = document.getElementById("thead-months");
+        const trJorn = document.getElementById("thead-jornades");
+        trMonths.innerHTML = `<th class="col-day-num">DIA</th>`;
+        trJorn.innerHTML = `<th class="col-day-num">JORN</th>`;
+
+        MONTHS.forEach((m, idx) => {
+          const thM = document.createElement("th");
+          thM.textContent = m.nextYear ? `GEN '${nextYearShort}` : m.label;
+          if (m.nextYear) thM.className = "next-yr";
+          trMonths.appendChild(thM);
+
+          const thJ = document.createElement("th");
+          thJ.textContent = yStore.jornades[idx] || "07:08";
+          if (m.nextYear) thJ.className = "next-yr";
+          thJ.dataset.openJornades = "1";
+          trJorn.appendChild(thJ);
+        });
+
+        const tbody = document.getElementById("tbody-days");
+        tbody.innerHTML = "";
+
+        for (let d = 1; d <= 31; d++) {
+          const tr = document.createElement("tr");
+          const tdNum = document.createElement("td");
+          tdNum.className = "col-day-num";
+          tdNum.textContent = d;
+          tr.appendChild(tdNum);
+
+          MONTHS.forEach((m, colIdx) => {
+            const targetY = m.nextYear ? currentYear + 1 : currentYear;
+            const daysInMonth = new Date(targetY, m.idx + 1, 0).getDate();
+            const td = document.createElement("td");
+
+            if (d > daysInMonth) {
+              td.className = `day-cell disabled-cell ${m.nextYear ? "next-yr-col" : ""}`;
+              tr.appendChild(td);
+              return;
+            }
+
+            const rec = getDayRecord(targetY, m.idx, d);
+            const typeMeta = allTypes[rec.type] || allTypes.laborable;
+            const defaultMonthTeoMins = toMins(yStore.jornades[colIdx] || "07:08");
+            const teoMins = rec.customTeoMins !== undefined && rec.customTeoMins !== null
+              ? Number(rec.customTeoMins)
+              : defaultMonthTeoMins;
+
+            const { workedMins, hasRealEntry } = computeDayPunches(rec);
+            const isMatch = highlightedType && rec.type === highlightedType;
+            const isToday = rec.key === todayStr;
+
+            td.className = `day-cell ${rec.type === "cap_setmana" ? "weekend-cell" : ""} ${m.nextYear ? "next-yr-col" : ""} ${isMatch ? "highlight-match" : ""} ${isToday ? "is-today" : ""}`;
+            if (isToday) td.title = "Avui";
+            if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+              td.style.backgroundColor = typeMeta.bg;
+            }
+            td.dataset.editDate = rec.key;
+            td.dataset.colIdx = colIdx;
+
+            const flex = document.createElement("div");
+            flex.className = "cell-flex";
+
+            const spanDow = document.createElement("span");
+            spanDow.className = "dow-tag";
+            spanDow.textContent = DOW_NAMES[rec.dow];
+            if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+              spanDow.style.color = typeMeta.txt;
+              spanDow.style.opacity = "0.85";
+            }
+
+            const spanRight = document.createElement("span");
+            spanRight.className = "cell-right";
+
+            if (hasRealEntry) {
+              const diff = workedMins - (typeMeta.isWorkingDay ? teoMins : 0);
+              const wSpan = document.createElement("span");
+              wSpan.className = "time-worked";
+              wSpan.textContent = toHHMM(workedMins);
+
+              const dSpan = document.createElement("span");
+              dSpan.className = diff >= 0 ? "time-diff-pos" : "time-diff-neg";
+              dSpan.textContent = toHHMM(diff, true);
+
+              if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+                wSpan.style.color = typeMeta.txt;
+                dSpan.style.color = typeMeta.txt;
+              }
+
+              spanRight.appendChild(wSpan);
+              spanRight.appendChild(dSpan);
+            } else if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+              const bSpan = document.createElement("span");
+              bSpan.className = "badge-text";
+              bSpan.style.color = typeMeta.txt;
+              bSpan.textContent = rec.note || typeMeta.short || typeMeta.label;
+              spanRight.appendChild(bSpan);
+            } else {
+              const dash = document.createElement("span");
+              dash.className = "dash-empty";
+              dash.textContent = "-";
+              spanRight.appendChild(dash);
+            }
+
+            flex.appendChild(spanDow);
+            flex.appendChild(spanRight);
+            td.appendChild(flex);
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        }
+
+        const tfoot = document.getElementById("tfoot-totals");
+        tfoot.innerHTML = "";
+
+        const trHores = document.createElement("tr");
+        trHores.innerHTML = `<td class="col-day-num">HORES</td>`;
+        metrics.monthStats.forEach((ms, i) => {
+          trHores.innerHTML += `<td class="${MONTHS[i].nextYear ? "next-yr-col" : ""}">${toHHMM(ms.teoMonthMins)}</td>`;
+        });
+        tfoot.appendChild(trHores);
+
+        const trDies = document.createElement("tr");
+        trDies.innerHTML = `<td class="col-day-num">DIES</td>`;
+        metrics.monthStats.forEach((ms, i) => {
+          trDies.innerHTML += `<td class="${MONTHS[i].nextYear ? "next-yr-col" : ""}">${ms.workingDaysCount}</td>`;
+        });
+        tfoot.appendChild(trDies);
+
+        const trSaldo = document.createElement("tr");
+        trSaldo.innerHTML = `<td class="col-day-num">SALDO</td>`;
+        metrics.monthStats.forEach((ms, i) => {
+          const saldoMes = ms.realWorkedMins - ms.teoMonthMins;
+          const cls = saldoMes > 0 ? "saldo-pos" : (saldoMes < 0 ? "saldo-neg" : "");
+          trSaldo.innerHTML += `<td class="${MONTHS[i].nextYear ? "next-yr-col" : ""} ${cls}">${toHHMM(saldoMes, true)}</td>`;
+        });
+        tfoot.appendChild(trSaldo);
+      }
+
+      /* 2. VISTA MENSUAL */
+      function renderMonthlyView(yStore, metrics) {
+        const pillsBox = document.getElementById("monthly-selector-pills");
+        pillsBox.innerHTML = "";
+        const todayStr = getTodayKey();
+        const allTypes = getAllDayTypes();
+
+        MONTHS.forEach((m, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `m-pill ${idx === activeMonthCol ? "active" : ""}`;
+          btn.textContent = m.nextYear ? `Gen '${String(currentYear + 1).slice(-2)}` : m.label;
+          btn.dataset.selectMonthCol = idx;
+          pillsBox.appendChild(btn);
+        });
+
+        const mMeta = MONTHS[activeMonthCol];
+        const targetY = mMeta.nextYear ? currentYear + 1 : currentYear;
+        const mStats = metrics.monthStats[activeMonthCol];
+        const jornStr = yStore.jornades[activeMonthCol] || "07:08";
+
+        document.getElementById("lbl-monthly-title").textContent = `${FULL_MONTH_NAMES[mMeta.idx].toUpperCase()} ${targetY}`;
+        document.getElementById("lbl-monthly-jorn").textContent = `Jornada: ${jornStr}`;
+
+        document.getElementById("mkpi-dies").textContent = `${mStats.workingDaysCount} dies`;
+        document.getElementById("mkpi-teo").textContent = `${toHHMM(mStats.teoMonthMins)} h`;
+        document.getElementById("mkpi-real").textContent = `${toHHMM(mStats.realWorkedMins)} h`;
+
+        const saldoMes = mStats.realWorkedMins - mStats.teoMonthMins;
+        const mkpiSaldoEl = document.getElementById("mkpi-saldo");
+        mkpiSaldoEl.textContent = `${toHHMM(saldoMes, true)} h`;
+        mkpiSaldoEl.style.color = saldoMes >= 0 ? "#16A34A" : "#DC2626";
+
+        const grid = document.getElementById("cal-7-container");
+        grid.innerHTML = "";
+
+        const dowsOrder = ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"];
+        dowsOrder.forEach(dName => {
+          const hdr = document.createElement("div");
+          hdr.className = "cal-7-dow";
+          hdr.textContent = dName;
+          grid.appendChild(hdr);
+        });
+
+        const firstDay = new Date(targetY, mMeta.idx, 1);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(targetY, mMeta.idx + 1, 0).getDate();
+
+        for (let i = 0; i < startOffset; i++) {
+          const empty = document.createElement("div");
+          empty.className = "cal-7-day empty";
+          grid.appendChild(empty);
+        }
+
+        const defaultMonthTeoMins = toMins(jornStr);
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const rec = getDayRecord(targetY, mMeta.idx, d);
+          const typeMeta = allTypes[rec.type] || allTypes.laborable;
+          const teoMins = rec.customTeoMins !== undefined && rec.customTeoMins !== null
+            ? Number(rec.customTeoMins)
+            : defaultMonthTeoMins;
+          const { workedMins, hasRealEntry } = computeDayPunches(rec);
+          const isMatch = highlightedType && rec.type === highlightedType;
+          const isToday = rec.key === todayStr;
+
+          const card = document.createElement("div");
+          card.className = `cal-7-day ${rec.type === "cap_setmana" ? "weekend" : ""} ${isMatch ? "highlight-match" : ""} ${isToday ? "is-today" : ""}`;
+          if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+            card.style.backgroundColor = typeMeta.bg;
+            card.style.color = typeMeta.txt;
+          }
+          card.dataset.editDate = rec.key;
+          card.dataset.colIdx = activeMonthCol;
+
+          const punchesStr = (rec.punches || [])
+            .filter(p => p.in || p.out)
+            .map(p => `${p.in || "--:--"}→${p.out || "--:--"}`)
+            .join(" · ");
+
+          let botHtml = "";
+          if (hasRealEntry) {
+            const diff = workedMins - (typeMeta.isWorkingDay ? teoMins : 0);
+            const diffColor = (rec.type === "laborable")
+              ? (diff >= 0 ? "#16A34A" : "#DC2626")
+              : typeMeta.txt;
+            botHtml = `
+              <span>${toHHMM(workedMins)}</span>
+              <span style="color:${diffColor};">${toHHMM(diff, true)}</span>
+            `;
+          } else {
+            botHtml = `<span style="opacity:0.6; font-weight:600;">-</span><span></span>`;
+          }
+
+          const todayBadge = isToday ? `<span class="today-pill-tag">AVUI</span>` : "";
+          const safeMidText = escapeHTML(rec.note || (rec.type !== "laborable" ? (typeMeta.short || typeMeta.label) : ""));
+
+          card.innerHTML = `
+            <div class="c7-top">
+              <span class="c7-num">${d} ${todayBadge}</span>
+              <span class="c7-teo">${typeMeta.isWorkingDay ? `${toHHMM(teoMins)}` : ""}</span>
+            </div>
+            <div class="c7-mid">${safeMidText}</div>
+            <div class="c7-punches">${escapeHTML(punchesStr)}</div>
+            <div class="c7-bot">${botHtml}</div>
+          `;
+          grid.appendChild(card);
+        }
+      }
+
+      /* 3. VISTA ANALÍTICA I GRÀFICS */
+      function renderChartsView(metrics) {
+        document.getElementById("lbl-charts-year").textContent = currentYear;
+        const year12 = metrics.monthStats.slice(0, 12);
+        const allTypes = getAllDayTypes();
+
+        let cumMins = 0;
+        const pointsData = year12.map((ms, idx) => {
+          const monthLoggedSaldo = ms.realWorkedMins - ms.loggedTeoMins;
+          cumMins += monthLoggedSaldo;
+          return {
+            label: MONTHS[idx].label,
+            monthHrs: +(monthLoggedSaldo / 60).toFixed(2),
+            cumHrs: +(cumMins / 60).toFixed(2)
+          };
+        });
+
+        const maxAbs = Math.max(5, ...pointsData.map(p => Math.max(Math.abs(p.cumHrs), Math.abs(p.monthHrs))));
+        const W = 720, H = 175, padL = 44, padR = 20, padT = 18, padB = 24;
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+        const zeroY = padT + plotH / 2;
+
+        const coords = pointsData.map((p, i) => {
+          const x = padL + (i * (plotW / 11));
+          const y = zeroY - ((p.cumHrs / maxAbs) * (plotH / 2));
+          return { ...p, x, y };
+        });
+
+        const polylinePts = coords.map(c => `${c.x},${c.y}`).join(" ");
+
+        let svgLine = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+        svgLine += `<line x1="${padL}" y1="${padT}" x2="${W - padR}" y2="${padT}" stroke="#CBD5E1" stroke-dasharray="3,3"/>`;
+        svgLine += `<line x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}" stroke="#64748B" stroke-width="1.2"/>`;
+        svgLine += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#CBD5E1" stroke-dasharray="3,3"/>`;
+        svgLine += `<text x="${padL - 6}" y="${padT + 4}" text-anchor="end" font-size="9" fill="#475569">+${maxAbs.toFixed(0)}h</text>`;
+        svgLine += `<text x="${padL - 6}" y="${zeroY + 3}" text-anchor="end" font-size="9" fill="#0F172A" font-weight="bold">0h</text>`;
+        svgLine += `<text x="${padL - 6}" y="${H - padB}" text-anchor="end" font-size="9" fill="#475569">-${maxAbs.toFixed(0)}h</text>`;
+        svgLine += `<polyline fill="none" stroke="#2563EB" stroke-width="2.5" points="${polylinePts}" />`;
+
+        coords.forEach(c => {
+          const dotColor = c.cumHrs >= 0 ? "#16A34A" : "#DC2626";
+          svgLine += `<circle cx="${c.x}" cy="${c.y}" r="4.5" fill="${dotColor}" stroke="#fff" stroke-width="1.5" />`;
+          svgLine += `<text x="${c.x}" y="${c.y - 7}" text-anchor="middle" font-size="9" font-weight="bold" fill="${dotColor}">${c.cumHrs >= 0 ? "+" : ""}${c.cumHrs}h</text>`;
+          svgLine += `<text x="${c.x}" y="${H - 6}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#334155">${c.label}</text>`;
+        });
+        svgLine += `</svg>`;
+        document.getElementById("chart-line-saldo").innerHTML = svgLine;
+
+        const maxHrs = Math.max(160, ...year12.map(ms => Math.max(ms.teoMonthMins, ms.realWorkedMins) / 60));
+        const BW = 430, BH = 195, bPadL = 34, bPadB = 24, bPadT = 12;
+        const bPlotW = BW - bPadL - 10;
+        const bPlotH = BH - bPadT - bPadB;
+        const groupW = bPlotW / 12;
+
+        let svgBars = `<svg viewBox="0 0 ${BW} ${BH}" preserveAspectRatio="xMidYMid meet">`;
+        svgBars += `<line x1="${bPadL}" y1="${BH - bPadB}" x2="${BW - 10}" y2="${BH - bPadB}" stroke="#94A3B8" />`;
+        svgBars += `<text x="${bPadL - 4}" y="${bPadT + 6}" text-anchor="end" font-size="8.5" fill="#475569">${Math.round(maxHrs)}h</text>`;
+        svgBars += `<text x="${bPadL - 4}" y="${BH - bPadB}" text-anchor="end" font-size="8.5" fill="#475569">0h</text>`;
+
+        year12.forEach((ms, i) => {
+          const teoH = ms.teoMonthMins / 60;
+          const realH = ms.realWorkedMins / 60;
+          const h1 = (teoH / maxHrs) * bPlotH;
+          const h2 = (realH / maxHrs) * bPlotH;
+          const xBase = bPadL + i * groupW + 4;
+          const barW = (groupW - 10) / 2;
+
+          svgBars += `<rect x="${xBase}" y="${BH - bPadB - h1}" width="${barW}" height="${h1}" fill="#94A3B8" rx="2"></rect>`;
+          svgBars += `<rect x="${xBase + barW + 2}" y="${BH - bPadB - h2}" width="${barW}" height="${h2}" fill="#1B2A4A" rx="2"></rect>`;
+          svgBars += `<text x="${xBase + barW}" y="${BH - 7}" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#334155">${MONTHS[i].label}</text>`;
+        });
+        svgBars += `</svg>`;
+        document.getElementById("chart-bars-hours").innerHTML = svgBars;
+
+        const counts = {};
+        for (let m = 0; m < 12; m++) {
+          const dim = new Date(currentYear, m + 1, 0).getDate();
+          for (let d = 1; d <= dim; d++) {
+            const rec = getDayRecord(currentYear, m, d);
+            if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+              counts[rec.type] = (counts[rec.type] || 0) + 1;
+            }
+          }
+        }
+
+        const entries = Object.entries(counts).map(([k, val]) => ({
+          key: k,
+          label: allTypes[k]?.short || allTypes[k]?.label || k,
+          color: allTypes[k]?.chartColor || "#64748B",
+          val
+        })).sort((a, b) => b.val - a.val);
+
+        const totalSpecial = entries.reduce((a, b) => a + b.val, 0);
+        const radius = 52, cx = 70, cy = 70, circumference = 2 * Math.PI * radius;
+        let offset = 0;
+
+        let svgDonut = `<div style="display:flex; align-items:center; gap:10px; width:100%; height:100%;">`;
+        svgDonut += `<svg viewBox="0 0 140 140" preserveAspectRatio="xMidYMid meet" style="width:125px; height:125px; flex-shrink:0;">`;
+        if (totalSpecial === 0) {
+          svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#CBD5E1" stroke-width="18"/>`;
+        } else {
+          entries.forEach(item => {
+            const pct = item.val / totalSpecial;
+            const dash = pct * circumference;
+            svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${item.color}" stroke-width="18"
+              stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"></circle>`;
+            offset += dash;
+          });
+        }
+        svgDonut += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="14" font-weight="800" fill="#0F172A">${totalSpecial}d</text>`;
+        svgDonut += `</svg>`;
+
+        svgDonut += `<div style="display:flex; flex-direction:column; gap:3px; font-size:10px; width:100%; overflow-y:auto; max-height:100%;">`;
+        entries.forEach(item => {
+          svgDonut += `<div style="display:flex; justify-content:space-between; align-items:center;">
+            <span><span style="display:inline-block;width:8px;height:8px;background:${item.color};border-radius:2px;margin-right:4px;"></span>${escapeHTML(item.label)}</span>
+            <strong>${item.val}d</strong>
+          </div>`;
+        });
+        svgDonut += `</div></div>`;
+        document.getElementById("chart-donut-days").innerHTML = svgDonut;
+      }
+
+      /* 4. VISTA HISTORIAL I CERCA */
+      function renderHistoryView() {
+        document.getElementById("lbl-hist-year").textContent = currentYear;
+        const allTypes = getAllDayTypes();
+
+        const selType = document.getElementById("filter-hist-type");
+        const prevTypeVal = selType.value || "ALL";
+        selType.innerHTML = `
+          <option value="ALL">Tots els tipus de dia (amb activitat o permís)</option>
+          <option value="PUNCHES">Només dies amb fitxatges reals</option>
+        `;
+        Object.entries(allTypes).forEach(([k, cfg]) => {
+          if (k === "cap_setmana") return;
+          const opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent = cfg.label;
+          selType.appendChild(opt);
+        });
+        selType.value = prevTypeVal;
+
+        const selMonth = document.getElementById("filter-hist-month");
+        if (selMonth.options.length <= 1) {
+          MONTHS.forEach((m, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            opt.textContent = m.nextYear ? `Gener ${currentYear + 1}` : m.full;
+            selMonth.appendChild(opt);
+          });
+        }
+
+        const fType = selType.value;
+        const fText = document.getElementById("filter-hist-text").value.trim().toLowerCase();
+        const fMonth = selMonth.value;
+
+        const rows = [];
+        MONTHS.forEach((m, colIdx) => {
+          if (fMonth !== "ALL" && Number(fMonth) !== colIdx) return;
+          const targetY = m.nextYear ? currentYear + 1 : currentYear;
+          const dim = new Date(targetY, m.idx + 1, 0).getDate();
+
+          for (let d = 1; d <= dim; d++) {
+            const rec = getDayRecord(targetY, m.idx, d);
+            const { workedMins, hasRealEntry } = computeDayPunches(rec);
+
+            const isInteresting = rec.type !== "cap_setmana" && (rec.type !== "laborable" || hasRealEntry || rec.note);
+            if (fType === "ALL" && !isInteresting) continue;
+            if (fType === "PUNCHES" && !hasRealEntry) continue;
+            if (fType !== "ALL" && fType !== "PUNCHES" && rec.type !== fType) continue;
+
+            const typeLabel = allTypes[rec.type]?.label || rec.type;
+            const haystack = `${rec.key} ${typeLabel} ${rec.note || ""}`.toLowerCase();
+            if (fText && !haystack.includes(fText)) continue;
+
+            rows.push({ rec, colIdx, workedMins, hasRealEntry, typeLabel });
+          }
+        });
+
+        document.getElementById("hist-count-badge").textContent = `${rows.length} registres`;
+
+        const tbody = document.getElementById("tbody-history");
+        tbody.innerHTML = "";
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748B;">No s'han trobat registres amb aquests filtres.</td></tr>`;
+          return;
+        }
+
+        rows.forEach(item => {
+          const { rec, colIdx, workedMins, hasRealEntry, typeLabel } = item;
+          const typeMeta = allTypes[rec.type] || allTypes.laborable;
+          const [y, m, d] = rec.key.split("-");
+          const punchesStr = (rec.punches || []).filter(p => p.in || p.out).map(p => `${p.in}-${p.out}`).join(" / ") || "-";
+
+          const tr = document.createElement("tr");
+          tr.dataset.editDate = rec.key;
+          tr.dataset.colIdx = colIdx;
+          tr.innerHTML = `
+            <td><strong>${d}/${m}/${y}</strong></td>
+            <td>${FULL_DOW_NAMES[rec.dow]}</td>
+            <td><span style="background:${typeMeta.bg}; color:${typeMeta.txt}; padding:2px 7px; border-radius:5px; font-weight:800; font-size:10px;">${escapeHTML(typeLabel)}</span></td>
+            <td>${escapeHTML(rec.note || "-")}</td>
+            <td style="font-variant-numeric:tabular-nums;">${escapeHTML(punchesStr)}</td>
+            <td style="font-weight:800;">${hasRealEntry ? `${toHHMM(workedMins)} h` : "-"}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      /* RENDER BORSA DE DIES */
+      function renderBorsa(yStore) {
+        const tbody = document.getElementById("tbody-borsa");
+        tbody.innerHTML = "";
+
+        const todayISO = getTodayKey();
+        const allTypes = getAllDayTypes();
+        const allBorsaItems = getAllBorsaItems();
+
+        const autoCounts = {};
+        allBorsaItems.forEach(item => { autoCounts[item.key] = { sol: 0, con: 0 }; });
+
+        Object.entries(state.days).forEach(([dKey, info]) => {
+          const inPeriod = dKey.startsWith(`${currentYear}-`) || dKey.startsWith(`${currentYear + 1}-01-`);
+          if (!inPeriod) return;
+          const bKey = allTypes[info.type]?.borsaKey;
+          if (bKey && autoCounts[bKey]) {
+            autoCounts[bKey].sol += 1;
+            if (dKey <= todayISO) autoCounts[bKey].con += 1;
+          }
+        });
+
+        let sumAssign = 0, sumSol = 0, sumCon = 0, sumRest = 0;
+        const disAttr = isEditMode ? "" : "disabled";
+        const apInfo = computeAPDaysFromHours(yStore.apHours, yStore.jornades);
+
+        allBorsaItems.forEach(item => {
+          const saved = yStore.borsa[item.key] || { total: item.defaultDies, solManual: 0, conManual: 0 };
+          const solMan = saved.solManual !== undefined ? saved.solManual : (saved.demanatsManual || 0);
+          const conMan = saved.conManual !== undefined ? saved.conManual : (saved.gauditsManual || 0);
+
+          const assignats = Number(saved.total) || 0;
+          const sollicitats = autoCounts[item.key].sol + (Number(solMan) || 0);
+          const consumits = autoCounts[item.key].con + (Number(conMan) || 0);
+          const restants = assignats - consumits;
+
+          sumAssign += assignats;
+          sumSol += sollicitats;
+          sumCon += consumits;
+          sumRest += restants;
+
+          const pendClass = restants === 0 ? "pend-zero" : (restants > 0 ? "pend-pos" : "pend-neg");
+          const apSubtitle = item.key === "ap"
+            ? `<span style="font-size:8.5px; color:#64748B; margin-left:2px;" title="${yStore.apHours} / mitjana ${toHHMM(apInfo.baseDayMins)} = ${apInfo.exactDays.toFixed(2)} dies">(${yStore.apHours})</span>`
+            : "";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><span class="dot-color" style="background:${item.color};"></span>${escapeHTML(item.label)}${apSubtitle}</td>
+            <td><input type="number" min="0" max="60" value="${assignats}" data-bkey="${item.key}" data-bfield="total" ${disAttr} /></td>
+            <td><input type="number" min="0" max="60" value="${sollicitats}" data-bkey="${item.key}" data-bfield="sol" ${disAttr} /></td>
+            <td><input type="number" min="0" max="60" value="${consumits}" data-bkey="${item.key}" data-bfield="con" ${disAttr} /></td>
+            <td><span class="badge-pend ${pendClass}">${restants}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const totPendClass = sumRest === 0 ? "pend-zero" : (sumRest > 0 ? "pend-pos" : "pend-neg");
+        const trTot = document.createElement("tr");
+        trTot.className = "total-row";
+        trTot.innerHTML = `
+          <td style="padding-left:12px;">TOTAL BORSES</td>
+          <td>${sumAssign}</td>
+          <td>${sumSol}</td>
+          <td>${sumCon}</td>
+          <td><span class="badge-pend ${totPendClass}">${sumRest}</span></td>
+        `;
+        tbody.appendChild(trTot);
+      }
+
+      /* RENDER LLEGENDA INTERACTIVA */
+      function renderLegend() {
+        const box = document.getElementById("legend-container");
+        box.innerHTML = "";
+        const allTypes = getAllDayTypes();
+        Object.entries(allTypes).forEach(([key, cfg]) => {
+          if (!cfg.inLegend) return;
+          const div = document.createElement("div");
+          const isActive = highlightedType === key;
+          div.className = `legend-pill ${cfg.interactiveLegend ? "interactive" : ""} ${isActive ? "active-filter" : ""}`;
+          div.style.backgroundColor = cfg.bg;
+          div.style.color = cfg.txt;
+          div.title = cfg.interactiveLegend
+            ? `Clica per fer destellar els dies de «${cfg.label}» al calendari`
+            : cfg.label;
+          if (cfg.interactiveLegend) {
+            div.dataset.legendType = key;
+          }
+          div.textContent = cfg.short || cfg.label;
+          box.appendChild(div);
+        });
+      }
+
+      /* ============================================================
+         MODAL GESTIÓ TIPUS DE DIA
+         ============================================================ */
+      function renderCustomTypesModal() {
+        const listEl = document.getElementById("custom-types-list");
+        listEl.innerHTML = "";
+
+        if (!state.customTypes || state.customTypes.length === 0) {
+          listEl.innerHTML = `<div style="text-align:center; padding:12px; color:#64748B; font-size:11px; border:1px dashed #cbd5e1; border-radius:8px;">Encara no has creat cap tipus de jornada personalitzat.</div>`;
+          return;
+        }
+
+        state.customTypes.forEach(ct => {
+          const row = document.createElement("div");
+          row.className = "custom-type-row";
+          const behaviorTxt = ct.isWorkingDay ? "Treball (cal fitxar)" : "Permís / No laborable";
+          const qMode = ct.quotaMode || (ct.hasBorsa ? "annual" : "none");
+          const qVal = Number(ct.quotaVal ?? ct.defaultDies) || 0;
+          let quotaTxt = " · Sense límit";
+          if (qMode === "weekly") quotaTxt = ` · Màx. ${qVal} dies/setmana`;
+          if (qMode === "annual") quotaTxt = ` · Borsa: ${qVal} dies/any`;
+
+          row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="ct-badge" style="background:${ct.bg}; color:${ct.txt};">${escapeHTML(ct.short || ct.label)}</span>
+              <div>
+                <div style="font-weight:700; font-size:11.5px;">${escapeHTML(ct.label)}</div>
+                <div class="ct-meta">${behaviorTxt}${quotaTxt}</div>
+              </div>
+            </div>
+            <button type="button" class="btn-reset-link" data-del-custom-type="${escapeHTML(ct.key)}" title="Eliminar aquest tipus">Eliminar</button>
+          `;
+          listEl.appendChild(row);
+        });
+      }
+
+      function openCustomTypesModal() {
+        if (!isEditMode) return;
+        renderCustomTypesModal();
+        document.getElementById("modal-custom-types").classList.add("open");
+      }
+
+      document.getElementById("ct-quota-mode").addEventListener("change", (e) => {
+        const mode = e.target.value;
+        const box = document.getElementById("ct-quota-val-box");
+        const lbl = document.getElementById("ct-quota-val-lbl");
+        const inp = document.getElementById("ct-quota-val");
+
+        if (mode === "none") {
+          box.classList.add("hidden");
+        } else if (mode === "weekly") {
+          box.classList.remove("hidden");
+          lbl.textContent = "Dies màxims per setmana (1-5)";
+          inp.max = "5";
+          inp.value = "2";
+        } else {
+          box.classList.remove("hidden");
+          lbl.textContent = "Dies assignats a la borsa anual";
+          inp.max = "60";
+          inp.value = "5";
+        }
+      });
+
+      document.getElementById("modal-custom-types").addEventListener("input", () => {
+        const bg = document.getElementById("ct-bg").value;
+        const txt = document.getElementById("ct-txt").value;
+        const name = document.getElementById("ct-short").value.trim() || document.getElementById("ct-name").value.trim() || "VISTA PRÈVIA";
+        const pill = document.getElementById("ct-preview-pill");
+        pill.style.backgroundColor = bg;
+        pill.style.color = txt;
+        pill.textContent = name.toUpperCase();
+      });
+
+      /* ============================================================
+         MODAL FITXATGE + VALIDACIÓ QUOTA SETMANAL
+         ============================================================ */
+      function formatCatalanDateHeader(y, m, d) {
+        const dt = new Date(y, m, d);
+        const dowStr = FULL_DOW_NAMES[dt.getDay()];
+        const monthName = FULL_MONTH_NAMES[m];
+        const prep = ["abril", "agost", "octubre"].includes(monthName) ? "d'" : "de ";
+        return {
+          dow: isEditMode ? dowStr : `${dowStr} · NOMÉS LECTURA`,
+          dateText: `${d} ${prep}${monthName} de ${y}`
+        };
+      }
+
+      function openDayModal(dKey, colIdx) {
+        activeEditDate = dKey;
+        const yStore = getYearStore(currentYear);
+        const [y, m, d] = dKey.split("-").map(Number);
+        const rec = getDayRecord(y, m - 1, d);
+        const allTypes = getAllDayTypes();
+
+        const monthIdx = colIdx !== undefined ? Number(colIdx) : (y > currentYear ? 12 : m - 1);
+        activeMonthTeoStr = yStore.jornades[monthIdx] || "07:08";
+
+        const headerTexts = formatCatalanDateHeader(y, m - 1, d);
+        document.getElementById("modal-dow-label").textContent = headerTexts.dow;
+        document.getElementById("modal-day-title").textContent = headerTexts.dateText;
+
+        const sel = document.getElementById("sel-day-type");
+        sel.innerHTML = "";
+        Object.entries(allTypes).forEach(([k, cfg]) => {
+          const opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent = cfg.label;
+          if (k === rec.type) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.disabled = !isEditMode;
+
+        const inpNote = document.getElementById("inp-day-note");
+        inpNote.value = rec.note || "";
+        inpNote.disabled = !isEditMode;
+
+        const inpPermis = document.getElementById("inp-permis-parcial");
+        inpPermis.value = toHHMM(rec.extraMins || 0);
+        inpPermis.disabled = !isEditMode;
+
+        const dayTeoStr = (rec.customTeoMins !== undefined && rec.customTeoMins !== null)
+          ? toHHMM(rec.customTeoMins)
+          : activeMonthTeoStr;
+        const inpTeo = document.getElementById("inp-teoric-dia");
+        inpTeo.value = dayTeoStr;
+        inpTeo.disabled = !isEditMode;
+
+        document.getElementById("lbl-jornada-mes-ref").textContent = `Jornada mes: ${activeMonthTeoStr}`;
+
+        document.getElementById("punches-action-btns").classList.toggle("hidden", !isEditMode);
+        document.getElementById("btn-reset-day").classList.toggle("hidden", !isEditMode);
+        document.getElementById("btn-save-day").classList.toggle("hidden", !isEditMode);
+        document.getElementById("btn-cancel-day").textContent = isEditMode ? "Cancel·lar" : "Tancar";
+
+        const pList = document.getElementById("punches-list");
+        pList.innerHTML = "";
+        const punches = rec.punches && rec.punches.length ? rec.punches : [{ in: "", out: "" }];
+        punches.forEach(p => appendPunchItem(p.in, p.out));
+
+        validateAndComputeModal();
+        document.getElementById("modal-day").classList.add("open");
+      }
+
+      function appendPunchItem(inVal = "", outVal = "") {
+        const pList = document.getElementById("punches-list");
+        const card = document.createElement("div");
+        card.className = "punch-item-card";
+        const disAttr = isEditMode ? "" : "disabled";
+        const delBtnHtml = isEditMode ? `<button type="button" class="punch-del-btn btn-rem-punch" title="Eliminar tram">✕</button>` : "";
+
+        card.innerHTML = `
+          <div class="punch-col">
+            <span class="punch-sublbl">ENTRADA</span>
+            <input type="time" class="punch-time-input inp-in" value="${escapeHTML(inVal)}" ${disAttr} />
+          </div>
+          <span class="punch-arrow">→</span>
+          <div class="punch-col">
+            <span class="punch-sublbl">SORTIDA</span>
+            <input type="time" class="punch-time-input inp-out" value="${escapeHTML(outVal)}" ${disAttr} />
+          </div>
+          <span class="punch-duration">00:00</span>
+          ${delBtnHtml}
+        `;
+        pList.appendChild(card);
+        validateAndComputeModal();
+      }
+
+      function validateAndComputeModal() {
+        let totalPunchMins = 0;
+        const intervals = [];
+        const errors = [];
+        const warnings = [];
+        const allTypes = getAllDayTypes();
+
+        const cards = document.querySelectorAll("#punches-list .punch-item-card");
+        cards.forEach((card, idx) => {
+          card.classList.remove("error-border", "warn-border");
+          const inVal = card.querySelector(".inp-in").value;
+          const outVal = card.querySelector(".inp-out").value;
+          const durEl = card.querySelector(".punch-duration");
+          let diff = 0;
+
+          if (inVal && !outVal) {
+            errors.push(`El tram #${idx + 1} té entrada (${inVal}) però falta la sortida.`);
+            card.classList.add("error-border");
+          } else if (!inVal && outVal) {
+            errors.push(`El tram #${idx + 1} té sortida (${outVal}) però falta l'entrada.`);
+            card.classList.add("error-border");
+          } else if (inVal && outVal) {
+            const startM = toMins(inVal);
+            const endM = toMins(outVal);
+            if (endM <= startM) {
+              errors.push(`Al tram #${idx + 1}, la sortida (${outVal}) ha de ser posterior a l'entrada (${inVal}).`);
+              card.classList.add("error-border");
+            } else {
+              diff = endM - startM;
+              if (diff > 14 * 60) {
+                warnings.push(`El tram #${idx + 1} supera les 14 hores (${toHHMM(diff)}). Comprova que sigui correcte.`);
+                card.classList.add("warn-border");
+              }
+              totalPunchMins += diff;
+              intervals.push({ start: startM, end: endM, inVal, outVal, card });
+            }
+          }
+          durEl.textContent = toHHMM(diff);
+        });
+
+        const sorted = [...intervals].sort((a, b) => a.start - b.start);
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i].start < sorted[i - 1].end) {
+            errors.push(`Solapament entre ${sorted[i - 1].inVal}–${sorted[i - 1].outVal} i ${sorted[i].inVal}–${sorted[i].outVal}.`);
+            sorted[i].card.classList.add("error-border");
+            sorted[i - 1].card.classList.add("error-border");
+          }
+        }
+
+        const permisStr = document.getElementById("inp-permis-parcial").value.trim();
+        if (permisStr && !isValidHHMM(permisStr, true, 12)) {
+          errors.push("El format del Permís Parcial ha de ser HH:MM (ex. 01:30, màx. 12:00).");
+        }
+        const permisMins = isValidHHMM(permisStr, true, 12) ? toMins(permisStr) : 0;
+
+        const teoStr = document.getElementById("inp-teoric-dia").value.trim();
+        if (!isValidHHMM(teoStr, true, 23)) {
+          errors.push("El format del Teòric del Dia ha de ser HH:MM (ex. 07:08).");
+        }
+
+        const dayType = document.getElementById("sel-day-type").value;
+        const typeMeta = allTypes[dayType] || allTypes.laborable;
+
+        if (activeEditDate && typeMeta.quotaMode === "weekly" && typeMeta.quotaVal > 0) {
+          const otherDaysThisWeek = getWeeklyTypeCount(activeEditDate, dayType, activeEditDate);
+          const totalThisWeek = otherDaysThisWeek + 1;
+          if (totalThisWeek > typeMeta.quotaVal) {
+            warnings.push(`Quota setmanal superada: ja tens ${otherDaysThisWeek} ${otherDaysThisWeek === 1 ? "dia" : "dies"} de «${typeMeta.label}» aquesta setmana (màxim configurat: ${typeMeta.quotaVal}/setm.).`);
+          }
+        }
+
+        const alertBox = document.getElementById("modal-validation-alert");
+        const saveBtn = document.getElementById("btn-save-day");
+        if (errors.length > 0 && isEditMode) {
+          alertBox.className = "validation-box show";
+          alertBox.textContent = `⚠ ${errors[0]}`;
+          saveBtn.disabled = true;
+        } else if (warnings.length > 0 && isEditMode) {
+          alertBox.className = "validation-box warn show";
+          alertBox.textContent = `ℹ️ ${warnings[0]}`;
+          saveBtn.disabled = false;
+        } else {
+          alertBox.className = "validation-box";
+          saveBtn.disabled = false;
+        }
+
+        const teoMins = (typeMeta.isWorkingDay && isValidHHMM(teoStr, true, 23)) ? toMins(teoStr) : 0;
+
+        const efectiuMins = totalPunchMins + permisMins;
+        const saldoMins = efectiuMins - teoMins;
+
+        document.getElementById("live-efectiu-dia").textContent = `${toHHMM(efectiuMins)} h`;
+        const saldoEl = document.getElementById("live-saldo-dia");
+        saldoEl.textContent = `${toHHMM(saldoMins, saldoMins !== 0)} h`;
+        saldoEl.className = `ds-val-big ${saldoMins >= 0 ? "ds-saldo-pos" : "ds-saldo-neg"}`;
+      }
+
+      function validateAndPreviewJornadesModal() {
+        const alertEl = document.getElementById("jornades-validation-alert");
+        const saveBtn = document.getElementById("btn-save-jornades");
+        const errors = [];
+
+        const convVal = Number(document.getElementById("inp-conveni-hours").value);
+        if (!convVal || convVal < 100 || convVal > 2500) {
+          errors.push("Les hores de conveni anual han d'estar entre 100 i 2500.");
+        }
+
+        const apStr = document.getElementById("inp-ap-hours").value.trim();
+        if (!isValidHHMM(apStr, true, 300)) {
+          errors.push("La borsa d'Assumptes Propis ha de tenir format HH:MM (ex. 57:30).");
+        }
+
+        const currentJornades = [];
+        document.querySelectorAll(".inp-j-mes").forEach(inp => {
+          const v = inp.value.trim();
+          currentJornades.push(v);
+          if (!isValidHHMM(v, false, 16)) {
+            errors.push(`Jornada invàlida (${v}). Usa format HH:MM entre 00:01 i 16:00.`);
+          }
+        });
+
+        if (errors.length > 0) {
+          alertEl.textContent = `⚠ ${errors[0]}`;
+          alertEl.classList.add("show");
+          saveBtn.disabled = true;
+        } else {
+          alertEl.classList.remove("show");
+          saveBtn.disabled = false;
+        }
+
+        const validApStr = isValidHHMM(apStr, true, 300) ? apStr : "57:30";
+        const validJornades = currentJornades.map(j => isValidHHMM(j, false, 16) ? j : "07:08");
+        const calc = computeAPDaysFromHours(validApStr, validJornades);
+
+        const preview = document.getElementById("ap-calc-preview");
+        preview.innerHTML = `
+          <div style="font-weight:800; font-size:11px; color:#713F12; margin-bottom:2px;">
+            📐 Càlcul automàtic d'Assumptes Propis (mitjana anual):
+          </div>
+          <div style="font-size:11px; color:#422006;">
+            <strong>${validApStr} h</strong> ÷ jornada mitjana <strong>${toHHMM(calc.baseDayMins)} h</strong> =
+            <strong>${calc.exactDays.toFixed(2)} dies</strong> → S'assignaran <strong>${calc.roundedDays} dies</strong>
+            ${calc.leftoverMins > 0 ? `(sobrant: <strong>${toHHMM(calc.leftoverMins)} h</strong>)` : "(exacte)"}.
+          </div>
+        `;
+      }
+
+      function openJornadesModal() {
+        if (!isEditMode) return;
+        const yStore = getYearStore(currentYear);
+        document.getElementById("inp-conveni-hours").value = yStore.conveniHours || 1668;
+        document.getElementById("inp-ap-hours").value = yStore.apHours || "57:30";
+        document.getElementById("chk-ap-leftover-saldo").checked = Boolean(yStore.addApLeftover);
+
+        const grid = document.getElementById("jornades-grid");
+        grid.innerHTML = "";
+        MONTHS.forEach((m, idx) => {
+          const div = document.createElement("div");
+          div.className = "m-field";
+          div.style.marginBottom = "4px";
+          div.innerHTML = `
+            <label class="m-label" style="font-size:10.5px;">${m.nextYear ? `GEN '${String(currentYear + 1).slice(-2)}` : m.label}</label>
+            <input type="text" class="m-input inp-j-mes" style="padding:5px 8px; font-size:12px;" data-jidx="${idx}" value="${yStore.jornades[idx] || "07:08"}" />
+          `;
+          grid.appendChild(div);
+        });
+
+        validateAndPreviewJornadesModal();
+        document.getElementById("modal-jornades").classList.add("open");
+      }
+
+      function openAuditModal() {
+        const box = document.getElementById("audit-log-container");
+        box.innerHTML = "";
+        if (!state.auditLog || state.auditLog.length === 0) {
+          box.innerHTML = `<div style="text-align:center; padding:20px; color:#64748B;">Encara no hi ha moviments registrats a l'historial d'auditoria.</div>`;
+        } else {
+          state.auditLog.forEach(entry => {
+            const div = document.createElement("div");
+            div.className = "audit-row";
+            div.innerHTML = `
+              <div><strong>${escapeHTML(entry.action)}</strong>: ${escapeHTML(entry.detail)}</div>
+              <div class="audit-ts">${escapeHTML(entry.ts)}</div>
+            `;
+            box.appendChild(div);
+          });
+        }
+        document.getElementById("modal-audit").classList.add("open");
+      }
+
+      /* ============================================================
+         ESDEVENIMENTS I INTERACCIÓ
+         ============================================================ */
+      document.getElementById("modal-jornades").addEventListener("input", () => validateAndPreviewJornadesModal());
+      document.getElementById("modal-day").addEventListener("input", () => { if (isEditMode) validateAndComputeModal(); });
+      document.getElementById("modal-day").addEventListener("change", () => { if (isEditMode) validateAndComputeModal(); });
+
+      document.getElementById("filter-hist-type").addEventListener("change", () => renderHistoryView());
+      document.getElementById("filter-hist-text").addEventListener("input", () => renderHistoryView());
+      document.getElementById("filter-hist-month").addEventListener("change", () => renderHistoryView());
+
+      document.getElementById("sel-municipi").addEventListener("change", async (e) => {
+        if (!isEditMode) return;
+        const yStore = getYearStore(currentYear);
+        pushUndoSnapshot();
+        yStore.municipi = e.target.value;
+        applyMunicipiToYear(currentYear, yStore.municipi);
+        logAudit("Municipi", `Canviat a ${yStore.municipi} per a l'any ${currentYear}`);
+        await saveState();
+        renderApp();
+      });
+
+      document.addEventListener("click", async (e) => {
+        const mobMenuBtn = e.target.closest("#btn-mobile-menu");
+        if (mobMenuBtn) {
+          const drawer = document.getElementById("top-actions-drawer");
+          const isOpen = drawer.classList.toggle("mobile-open");
+          mobMenuBtn.classList.toggle("open", isOpen);
+          mobMenuBtn.setAttribute("aria-expanded", isOpen);
+          return;
+        }
+
+        const accHeader = e.target.closest(".acc-header");
+        if (accHeader) {
+          const item = accHeader.closest(".acc-item");
+          const wasOpen = item.classList.contains("open");
+          document.querySelectorAll("#help-accordion-list .acc-item").forEach(el => el.classList.remove("open"));
+          if (!wasOpen) item.classList.add("open");
+          return;
+        }
+
+        if (e.target.closest("#btn-open-help")) {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          document.getElementById("modal-help").classList.add("open");
+          return;
+        }
+        if (e.target.id === "btn-close-help" || e.target.id === "btn-ok-help") {
+          document.getElementById("modal-help").classList.remove("open");
+          return;
+        }
+
+        if (e.target.closest("#btn-open-audit")) {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          openAuditModal();
+          return;
+        }
+        if (e.target.id === "btn-close-audit" || e.target.id === "btn-ok-audit") {
+          document.getElementById("modal-audit").classList.remove("open");
+          return;
+        }
+
+        if (e.target.closest("#btn-install-pwa")) {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            const choice = await deferredInstallPrompt.userChoice;
+            if (choice.outcome === "accepted") {
+              deferredInstallPrompt = null;
+              document.getElementById("btn-install-pwa").classList.add("hidden");
+            }
+          } else {
+            document.getElementById("modal-pwa-help").classList.add("open");
+          }
+          return;
+        }
+
+        if (e.target.id === "btn-close-pwa-help" || e.target.id === "btn-ok-pwa-help") {
+          document.getElementById("modal-pwa-help").classList.remove("open");
+          return;
+        }
+
+        if (e.target.id === "btn-open-custom-types" && isEditMode) {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          openCustomTypesModal();
+          return;
+        }
+        if (e.target.id === "btn-close-custom-types" || e.target.id === "btn-done-custom-types") {
+          document.getElementById("modal-custom-types").classList.remove("open");
+          return;
+        }
+
+        if (e.target.id === "btn-add-custom-type" && isEditMode) {
+          const name = document.getElementById("ct-name").value.trim();
+          if (!name) {
+            showToast("⚠ Escriu un nom per al nou tipus de dia.");
+            return;
+          }
+          const shortLbl = document.getElementById("ct-short").value.trim() || name.slice(0, 14);
+          const bg = document.getElementById("ct-bg").value;
+          const txt = document.getElementById("ct-txt").value;
+          const behavior = document.getElementById("ct-behavior").value;
+          const quotaMode = document.getElementById("ct-quota-mode").value;
+          const quotaVal = quotaMode === "none"
+            ? 0
+            : Math.max(1, Math.min(60, Number(document.getElementById("ct-quota-val").value) || 1));
+
+          const slug = "custom_" + Date.now().toString(36);
+          pushUndoSnapshot();
+
+          if (!Array.isArray(state.customTypes)) state.customTypes = [];
+          state.customTypes.push({
+            key: slug,
+            label: name,
+            short: shortLbl,
+            bg,
+            txt,
+            isWorkingDay: behavior === "working",
+            quotaMode,
+            quotaVal
+          });
+
+          if (quotaMode === "annual" && quotaVal > 0) {
+            const yStore = getYearStore(currentYear);
+            yStore.borsa[slug] = { total: quotaVal, solManual: 0, conManual: 0 };
+          }
+
+          document.getElementById("ct-name").value = "";
+          document.getElementById("ct-short").value = "";
+
+          logAudit("Tipus personalitzat", `Creat tipus «${name}»`);
+          await saveState();
+          renderCustomTypesModal();
+          renderApp();
+          showToast(`✅ Tipus «${name}» afegit correctament`);
+          return;
+        }
+
+        const delCtBtn = e.target.closest("[data-del-custom-type]");
+        if (delCtBtn && isEditMode) {
+          const keyToDel = delCtBtn.dataset.delCustomType;
+          pushUndoSnapshot();
+          state.customTypes = (state.customTypes || []).filter(c => c.key !== keyToDel);
+          if (highlightedType === keyToDel) highlightedType = null;
+          logAudit("Tipus personalitzat", `Eliminat tipus (${keyToDel})`);
+          await saveState();
+          renderCustomTypesModal();
+          renderApp();
+          showToast("🗑️ Tipus personalitzat eliminat");
+          return;
+        }
+
+        const legendBtn = e.target.closest("[data-legend-type]");
+        if (legendBtn) {
+          toggleHighlightType(legendBtn.dataset.legendType);
+          return;
+        }
+
+        if (e.target.id === "btn-clear-highlight") {
+          highlightedType = null;
+          renderApp();
+          return;
+        }
+
+        const viewTab = e.target.closest(".view-tab");
+        if (viewTab) {
+          activeView = viewTab.dataset.view;
+          mobileTab = activeView;
+          renderApp();
+          return;
+        }
+
+        const mobBtn = e.target.closest(".mob-nav-btn");
+        if (mobBtn) {
+          const tab = mobBtn.dataset.mobTab;
+          mobileTab = tab;
+          if (tab !== "summary") {
+            activeView = tab;
+          }
+          renderApp();
+          return;
+        }
+
+        if (e.target.closest("#btn-mobile-quick-punch") && isEditMode) {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = now.getMonth();
+          const d = now.getDate();
+          currentYear = y;
+          const todayKey = dateKey(y, m, d);
+          getYearStore(currentYear);
+          const rec = getDayRecord(y, m, d);
+
+          const nowHHMM = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+          const punches = rec.punches ? [...rec.punches] : [];
+
+          if (punches.length === 0 || (punches[punches.length - 1].in && punches[punches.length - 1].out)) {
+            punches.push({ in: nowHHMM, out: "" });
+          } else if (punches[punches.length - 1].in && !punches[punches.length - 1].out) {
+            if (toMins(nowHHMM) > toMins(punches[punches.length - 1].in)) {
+              punches[punches.length - 1].out = nowHHMM;
+            } else {
+              showToast("⚠ L'hora actual és igual o anterior a l'entrada registrada.");
+              openDayModal(todayKey, m);
+              return;
+            }
+          }
+
+          pushUndoSnapshot();
+          state.days[todayKey] = { ...rec, type: rec.type === "cap_setmana" ? "laborable" : rec.type, punches };
+          logAudit("Fitxatge ràpid", `${todayKey} (${nowHHMM})`);
+          await saveState();
+          renderApp();
+          openDayModal(todayKey, m);
+          return;
+        }
+
+        const mPill = e.target.closest("[data-select-month-col]");
+        if (mPill) {
+          activeMonthCol = Number(mPill.dataset.selectMonthCol);
+          renderMonthlyView(getYearStore(currentYear), computeYearMetrics(getYearStore(currentYear)));
+          return;
+        }
+
+        if (e.target.closest("#btn-undo") && undoStack.length > 0 && isEditMode) {
+          const prevJson = undoStack.pop();
+          state = JSON.parse(prevJson);
+          updateUndoUI();
+          await saveState(false);
+          renderApp();
+          showToast("↩ Últim canvi desfet");
+          return;
+        }
+
+        if (e.target.closest("#btn-toggle-mode")) {
+          isEditMode = !isEditMode;
+          renderApp();
+          return;
+        }
+
+        const yrBtn = e.target.closest("[data-select-year]");
+        if (yrBtn) {
+          currentYear = Number(yrBtn.dataset.selectYear);
+          highlightedType = null;
+          renderApp();
+          return;
+        }
+
+        const blkBtn = e.target.closest("[data-nav-block]");
+        if (blkBtn) {
+          blockStartYear += Number(blkBtn.dataset.navBlock);
+          renderYearNav();
+          return;
+        }
+
+        const cell = e.target.closest("[data-edit-date]");
+        if (cell) {
+          openDayModal(cell.dataset.editDate, cell.dataset.colIdx);
+          return;
+        }
+
+        if (e.target.closest("[data-open-jornades]") || e.target.closest("#kpi-conveni-box") || e.target.id === "btn-open-jornades") {
+          if (isEditMode) {
+            document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+            document.getElementById("btn-mobile-menu").classList.remove("open");
+            openJornadesModal();
+          }
+          return;
+        }
+
+        if (e.target.id === "btn-close-day" || e.target.id === "btn-cancel-day") {
+          document.getElementById("modal-day").classList.remove("open");
+        }
+
+        if (e.target.id === "btn-add-punch" && isEditMode) {
+          appendPunchItem();
+        }
+
+        if (e.target.id === "btn-fill-jornada" && isEditMode) {
+          const teoStr = document.getElementById("inp-teoric-dia").value.trim() || activeMonthTeoStr;
+          const teoMins = isValidHHMM(teoStr, false, 16) ? toMins(teoStr) : toMins(activeMonthTeoStr);
+          const startMins = 7 * 60 + 30;
+          const endMins = startMins + teoMins;
+
+          const pList = document.getElementById("punches-list");
+          pList.innerHTML = "";
+          appendPunchItem(toHHMM(startMins), toHHMM(endMins));
+        }
+
+        if (e.target.closest(".btn-rem-punch") && isEditMode) {
+          const cards = document.querySelectorAll("#punches-list .punch-item-card");
+          if (cards.length > 1) {
+            e.target.closest(".punch-item-card").remove();
+          } else {
+            const card = e.target.closest(".punch-item-card");
+            card.querySelector(".inp-in").value = "";
+            card.querySelector(".inp-out").value = "";
+          }
+          validateAndComputeModal();
+        }
+
+        if (e.target.id === "btn-save-day" && activeEditDate && isEditMode) {
+          pushUndoSnapshot();
+
+          const type = document.getElementById("sel-day-type").value;
+          const note = document.getElementById("inp-day-note").value.trim();
+
+          const permisStr = document.getElementById("inp-permis-parcial").value.trim();
+          const extraMins = isValidHHMM(permisStr, true, 12) ? toMins(permisStr) : 0;
+
+          const teoStr = document.getElementById("inp-teoric-dia").value.trim();
+          const normTeo = normalizeHHMM(teoStr, activeMonthTeoStr);
+          const customTeoMins = (normTeo !== activeMonthTeoStr) ? toMins(normTeo) : null;
+
+          const punches = [];
+          document.querySelectorAll("#punches-list .punch-item-card").forEach(row => {
+            const pIn = row.querySelector(".inp-in").value;
+            const pOut = row.querySelector(".inp-out").value;
+            if (pIn && pOut && toMins(pOut) > toMins(pIn)) {
+              punches.push({ in: pIn, out: pOut });
+            }
+          });
+
+          state.days[activeEditDate] = { type, note, punches, extraMins, customTeoMins };
+          logAudit("Edició dia", `${activeEditDate} → ${type}${punches.length ? ` (${punches.length} trams)` : ""}`);
+          await saveState();
+          document.getElementById("modal-day").classList.remove("open");
+          renderApp();
+        }
+
+        if (e.target.id === "btn-reset-day" && activeEditDate && isEditMode) {
+          pushUndoSnapshot();
+          delete state.days[activeEditDate];
+          logAudit("Restablir dia", `${activeEditDate}`);
+          await saveState();
+          document.getElementById("modal-day").classList.remove("open");
+          renderApp();
+        }
+
+        if (e.target.id === "btn-close-jornades" || e.target.id === "btn-cancel-jornades") {
+          document.getElementById("modal-jornades").classList.remove("open");
+        }
+
+        if (e.target.id === "btn-save-jornades" && isEditMode) {
+          const yStore = getYearStore(currentYear);
+          pushUndoSnapshot();
+          const convVal = Number(document.getElementById("inp-conveni-hours").value);
+          if (convVal >= 100 && convVal <= 2500) yStore.conveniHours = convVal;
+
+          const apVal = document.getElementById("inp-ap-hours").value.trim();
+          if (isValidHHMM(apVal, true, 300)) {
+            yStore.apHours = normalizeHHMM(apVal, "57:30");
+          }
+          yStore.addApLeftover = document.getElementById("chk-ap-leftover-saldo").checked;
+
+          document.querySelectorAll(".inp-j-mes").forEach(inp => {
+            const idx = Number(inp.dataset.jidx);
+            const val = inp.value.trim();
+            if (isValidHHMM(val, false, 16)) {
+              yStore.jornades[idx] = normalizeHHMM(val, "07:08");
+            }
+          });
+
+          const apCalc = computeAPDaysFromHours(yStore.apHours, yStore.jornades);
+          if (!yStore.borsa.ap) yStore.borsa.ap = { total: apCalc.roundedDays, solManual: 0, conManual: 0 };
+          yStore.borsa.ap.total = apCalc.roundedDays;
+
+          logAudit("Configuració anual", `Any ${currentYear}: conveni ${yStore.conveniHours}h, AP ${yStore.apHours}`);
+          await saveState();
+          document.getElementById("modal-jornades").classList.remove("open");
+          renderApp();
+        }
+
+        if (e.target.id === "btn-export-json") {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          state.changesSinceBackup = 0;
+          state.lastBackupTs = Date.now();
+          logAudit("Backup", "Exportació de còpia de seguretat JSON");
+          await saveState(false);
+          const exportPayload = {
+            app: "ControlHorariCorporatiu",
+            version: 6,
+            exportedAt: new Date().toISOString(),
+            ...state
+          };
+          const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `backup_control_horari_${getTodayKey()}.json`;
+          a.click();
+          renderApp();
+          showToast("💾 Còpia de seguretat JSON descarregada");
+        }
+
+        if (e.target.id === "btn-export-csv") {
+          document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+          document.getElementById("btn-mobile-menu").classList.remove("open");
+          const allTypes = getAllDayTypes();
+          let csv = "\uFEFFData;Dia_Setmana;Tipus;Observacio;Marcatges;Permis_Parcial;Hores_Treballades\n";
+          for (let m = 0; m < 12; m++) {
+            const daysInM = new Date(currentYear, m + 1, 0).getDate();
+            for (let d = 1; d <= daysInM; d++) {
+              const rec = getDayRecord(currentYear, m, d);
+              const { workedMins } = computeDayPunches(rec);
+              const pStr = (rec.punches || []).map(p => `${p.in}-${p.out}`).join(" / ");
+              const safeNote = (rec.note || "").replace(/"/g, '""');
+              const tLabel = allTypes[rec.type]?.label || rec.type;
+              csv += `${rec.key};${FULL_DOW_NAMES[rec.dow]};${tLabel};"${safeNote}";"${pStr}";${toHHMM(rec.extraMins || 0)};${toHHMM(workedMins)}\n`;
+            }
+          }
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `control_horari_${currentYear}.csv`;
+          a.click();
+          showToast("📥 Exportació CSV generada");
+        }
+      });
+
+      document.getElementById("tbody-borsa").addEventListener("change", async (e) => {
+        if (!isEditMode) return;
+        const inp = e.target;
+        if (!inp.dataset.bkey) return;
+
+        const yStore = getYearStore(currentYear);
+        const allTypes = getAllDayTypes();
+        pushUndoSnapshot();
+
+        const key = inp.dataset.bkey;
+        const field = inp.dataset.bfield;
+        const val = Math.min(100, Math.max(0, Math.round(Number(inp.value) || 0)));
+
+        const todayISO = getTodayKey();
+        let calSol = 0, calCon = 0;
+        Object.entries(state.days).forEach(([dKey, info]) => {
+          const inPeriod = dKey.startsWith(`${currentYear}-`) || dKey.startsWith(`${currentYear + 1}-01-`);
+          if (inPeriod && allTypes[info.type]?.borsaKey === key) {
+            calSol++;
+            if (dKey <= todayISO) calCon++;
+          }
+        });
+
+        if (!yStore.borsa[key]) yStore.borsa[key] = { total: 0, solManual: 0, conManual: 0 };
+
+        if (field === "total") yStore.borsa[key].total = val;
+        if (field === "sol") yStore.borsa[key].solManual = Math.max(0, val - calSol);
+        if (field === "con") yStore.borsa[key].conManual = Math.max(0, val - calCon);
+
+        logAudit("Borsa de dies", `Modificat ${key} (${field} = ${val}) any ${currentYear}`);
+        await saveState();
+        renderApp();
+      });
+
+      document.getElementById("input-import-json").addEventListener("change", (e) => {
+        if (!isEditMode) return;
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            const rawParsed = JSON.parse(ev.target.result);
+            const validated = validateAndSanitizeImportedData(rawParsed);
+            pushUndoSnapshot();
+            state = validated;
+            logAudit("Restauració", `Importat backup (${file.name})`);
+            await saveState(false);
+            renderApp();
+            document.getElementById("top-actions-drawer").classList.remove("mobile-open");
+            document.getElementById("btn-mobile-menu").classList.remove("open");
+            showToast("✅ Còpia de seguretat restaurada correctament (pots fer servir Desfer si cal)");
+          } catch (err) {
+            alert(`Error en importar el fitxer: ${err.message}`);
+          } finally {
+            e.target.value = "";
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      initStorage().then(() => {
+        renderApp();
+      });
+    })();
+  </script>
+</body>
+</html>
