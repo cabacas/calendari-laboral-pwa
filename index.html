@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Control Horari" />
   <link rel="manifest" href="./manifest.json" />
   <link id="pwa-apple-icon" rel="apple-touch-icon" />
-  <title>Control Horari</title>
+  <title>Control Horari Corporatiu</title>
   <style>
     :root {
       --bg-page: #F1F5F9;
@@ -86,10 +86,10 @@
       #view-annual table.cal-table td { height: auto; padding: 0 2px; }
 
       #view-charts { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
-      #view-charts .charts-container { flex: 1; min-height: 0; display: grid; grid-template-rows: 1fr 1.15fr; gap: 8px; padding: 8px 10px; }
+      #view-charts .charts-container { flex: 1; min-height: 0; display: grid; grid-template-rows: 1.05fr 1fr; gap: 8px; padding: 8px 10px; }
       #view-charts .charts-two-col { min-height: 0; height: 100%; }
-      #view-charts .chart-card { display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 7px 10px; }
-      #view-charts .chart-body-flex { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      #view-charts .chart-card { display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 8px 11px; position: relative; }
+      #view-charts .chart-body-flex { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
       #view-charts .chart-body-flex > svg { width: 100%; height: 100%; max-height: 100%; }
 
       .right-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 0; gap: 6px; }
@@ -260,12 +260,47 @@
     .c7-punches { font-size: 8.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
     .c7-bot { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.18); padding-top: 2px; font-size: 9.5px; font-weight: 800; }
 
-    /* VISTA ANALÍTICA I HISTORIAL */
+    /* ============================================================
+       VISTA ANALÍTICA I GRÀFICS MILLORADA (Tooltips, llegenda, clic)
+       ============================================================ */
     #view-history { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
     .charts-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
-    .chart-card { background: #FFFFFF; border: 1px solid var(--border-soft); border-radius: 8px; padding: 8px 10px; }
-    .chart-title { font-size: 11.5px; font-weight: 800; color: var(--corp-navy); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+    .chart-card { background: #FFFFFF; border: 1px solid var(--border-soft); border-radius: 9px; padding: 8px 11px; position: relative; }
+    .chart-title {
+      font-size: 11.5px; font-weight: 800; color: var(--corp-navy); margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; flex-shrink: 0;
+    }
+    .chart-legend-inline { display: flex; align-items: center; gap: 10px; font-size: 10px; font-weight: 600; color: var(--text-muted); }
+    .cl-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
     .charts-two-col { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; }
+
+    /* Tooltip interactiu dels gràfics */
+    .chart-tooltip {
+      position: fixed;
+      background: var(--corp-navy);
+      color: #FFFFFF;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      pointer-events: none;
+      z-index: 250;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      min-width: 165px;
+      font-variant-numeric: tabular-nums;
+    }
+    .chart-tooltip.visible { opacity: 1; }
+    .ctip-title { font-weight: 800; color: #93C5FD; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 3px; margin-bottom: 4px; font-size: 11.5px; }
+    .ctip-row { display: flex; justify-content: space-between; gap: 10px; }
+
+    .donut-legend-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 2.5px 5px; border-radius: 5px; cursor: pointer; transition: background 0.12s;
+    }
+    .donut-legend-row:hover { background: #F1F5F9; }
 
     .search-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; background: var(--bg-subtle); border-bottom: 1px solid var(--border-soft); align-items: center; }
     .search-input { padding: 5px 8px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 11.5px; background: #FFFFFF; }
@@ -322,9 +357,7 @@
     .legend-pill.active-filter { outline: 2.5px solid #0F172A; outline-offset: 1px; transform: scale(1.03); box-shadow: 0 0 10px rgba(15, 23, 42, 0.35); }
     .btn-clear-filter { background: #DC2626; color: #FFFFFF; border: none; border-radius: 4px; padding: 1.5px 6px; font-size: 8.5px; font-weight: 800; cursor: pointer; }
 
-    /* ============================================================
-       ADAPTACIÓ MÒBIL EQUILIBRADA
-       ============================================================ */
+    /* MÒBIL */
     .mobile-bottom-nav { display: none; }
     .mobile-fab-punch { display: none; }
 
@@ -355,7 +388,6 @@
       }
       .btn-mobile-drawer-toggle.open { background: var(--corp-navy); color: #FFFFFF; border-color: var(--corp-navy); }
 
-      /* Graella simètrica 2x3/4 per a les eines */
       .top-actions {
         display: none; width: 100%; grid-template-columns: 1fr 1fr; gap: 6px;
         padding-top: 6px; border-top: 1px dashed var(--border-soft); grid-column: 1 / -1;
@@ -397,9 +429,7 @@
       }
     }
 
-    /* ============================================================
-       MODALS I ACORDIONS D'AJUDA INTERACTIVA
-       ============================================================ */
+    /* MODALS I ACORDIONS */
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(2px); z-index: 120; align-items: center; justify-content: center; padding: 12px;
@@ -469,7 +499,6 @@
     .ct-badge { padding: 3px 8px; border-radius: 5px; font-weight: 800; font-size: 11px; }
     .ct-meta { font-size: 10.5px; color: var(--text-muted); }
 
-    /* Acordions d'Ajuda Interactiva */
     .help-intro-card {
       background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
       border: 1px solid #BFDBFE; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
@@ -519,6 +548,9 @@
 
   <!-- Toast Flotant d'Avisos -->
   <div class="toast-banner" id="toast-banner"></div>
+
+  <!-- Tooltip Flotant per als Gràfics -->
+  <div class="chart-tooltip" id="chart-tooltip"></div>
 
   <!-- Capçalera Superior Corporativa -->
   <header class="topbar">
@@ -659,32 +691,49 @@
         <div class="cal-7-grid" id="cal-7-container"></div>
       </div>
 
-      <!-- 3. VISTA ANALÍTICA I GRÀFICS -->
+      <!-- 3. VISTA ANALÍTICA I GRÀFICS MILLORADA -->
       <div id="view-charts" class="hidden">
         <div class="calendar-card-header">
           <div>
             <strong>Analítica Visual i Evolució (<span id="lbl-charts-year"></span>)</strong>
+            <span class="sub">· Passa el cursor per sobre de cada mes per veure el detall exacte</span>
           </div>
-          <span style="font-size:10px; color:#CBD5E1;">Resum gràfic anual</span>
+          <span style="font-size:10px; color:#CBD5E1;">Format HH:MM</span>
         </div>
 
         <div class="charts-container">
+          <!-- Gràfic 1: Combinat de Barres de Saldo Mensual + Línia de Saldo Acumulat -->
           <div class="chart-card">
             <div class="chart-title">
-              <span>📈 Evolució del Saldo Mensual i Acumulat (Hores)</span>
-              <span style="font-size:9.5px; color:#64748B;">Línia blava: Saldo acumulat</span>
+              <span>📈 Saldo Mensual (Barres) i Saldo Acumulat (Línia)</span>
+              <div class="chart-legend-inline">
+                <span><span class="cl-dot" style="background:#16A34A;"></span>Mes positiu</span>
+                <span><span class="cl-dot" style="background:#DC2626;"></span>Mes negatiu</span>
+                <span><span class="cl-dot" style="background:#2563EB; border-radius:50%;"></span>Saldo acumulat</span>
+              </div>
             </div>
             <div class="chart-body-flex" id="chart-line-saldo"></div>
           </div>
 
           <div class="charts-two-col">
+            <!-- Gràfic 2: Comparativa Teòric Dies Fitxats vs Treballades Reals -->
             <div class="chart-card">
-              <div class="chart-title"><span>📊 Hores Teòriques vs. Treballades</span></div>
+              <div class="chart-title">
+                <span>📊 Hores Teòriques (Dies Fitxats) vs. Reals</span>
+                <div class="chart-legend-inline">
+                  <span><span class="cl-dot" style="background:#94A3B8;"></span>Teòric</span>
+                  <span><span class="cl-dot" style="background:#1B2A4A;"></span>Reals</span>
+                </div>
+              </div>
               <div class="chart-body-flex" id="chart-bars-hours"></div>
             </div>
 
+            <!-- Gràfic 3: Donut de Dies i Permisos amb Percentatges i Clic -->
             <div class="chart-card">
-              <div class="chart-title"><span>🍩 Distribució de Dies / Permisos</span></div>
+              <div class="chart-title">
+                <span>🍩 Dies No Laborables / Permisos</span>
+                <span style="font-size:9.5px; color:#64748B;">Clica un concepte per cercar</span>
+              </div>
               <div class="chart-body-flex" id="chart-donut-days"></div>
             </div>
           </div>
@@ -731,7 +780,6 @@
 
     <!-- COLUMNA DRETA -->
     <aside class="right-column">
-      <!-- Resum Global d'Hores + Projecció Final d'Any -->
       <div class="panel-card">
         <div class="panel-header">
           <span class="panel-title">📊 Resum Global (<span id="lbl-kpi-year"></span>)</span>
@@ -775,7 +823,6 @@
         </div>
       </div>
 
-      <!-- Borses de Dies Disponibles -->
       <div class="panel-card">
         <div class="panel-header">
           <span class="panel-title">📅 Borsa de Dies Disponibles</span>
@@ -796,7 +843,6 @@
         </table>
       </div>
 
-      <!-- Llegenda Interactiva -->
       <div class="panel-card">
         <div class="panel-header" style="margin-bottom:4px;">
           <span class="panel-title" style="font-size:9.5px; text-transform:uppercase; color:#334155;">Llegenda (Clica per ressaltar)</span>
@@ -831,9 +877,7 @@
     </button>
   </nav>
 
-  <!-- ============================================================
-       POPUP D'AJUDA INTERACTIVA AMB ACORDIONS
-       ============================================================ -->
+  <!-- POPUP D'AJUDA INTERACTIVA -->
   <div class="modal-overlay" id="modal-help">
     <div class="modal-card">
       <div class="modal-dark-top">
@@ -900,7 +944,7 @@
             </button>
             <div class="acc-body">
               <ul>
-                <li>A <span class="acc-pill-hint">⚙ Jornades i AP</span> pots ajustar les hores de conveni (1.668 h) i la borsa d'Assumptes Propis (<code>57:30 h</code>), amb opció d'afegir els minuts sobrantes de la divisió directament al saldo anual.</li>
+                <li>A <span class="acc-pill-hint">⚙ Jornades i AP</span> pots ajustar les hores de conveni (1.668 h) i la borsa d'Assumptes Propis (<code>57:30 h</code>), amb opció d'afegir els minuts sobrants de la divisió directament al saldo anual.</li>
                 <li>A la taula de borses: <strong>Assign.</strong> són els dies totals, <strong>Sol·lic.</strong> els marcats al calendari i <strong>Consum.</strong> els que ja tenen data passada.</li>
               </ul>
             </div>
@@ -914,7 +958,7 @@
             <div class="acc-body">
               <ul>
                 <li>Fes clic sobre qualsevol etiqueta de la <strong>Llegenda de Colors</strong> per fer destellar al calendari tots els dies d'aquell tipus.</li>
-                <li>Consulta la pestanya <span class="acc-pill-hint">📈 Analítica i Gràfics</span> per veure l'evolució del saldo acumulat i la <span class="acc-pill-hint">🔍 Cerca</span> per filtrar dies concrets.</li>
+                <li>Consulta la pestanya <span class="acc-pill-hint">📈 Analítica i Gràfics</span> per veure el detall mensual amb <code>HH:MM</code> i passa el cursor per sobre de cada mes per veure el resum complet.</li>
               </ul>
             </div>
           </div>
@@ -1030,7 +1074,7 @@
     </div>
   </div>
 
-  <!-- Modal Gestió de Tipus de Dia i Borses / Quotes Setmanals -->
+  <!-- Modal Gestió de Tipus de Dia -->
   <div class="modal-overlay" id="modal-custom-types">
     <div class="modal-card">
       <div class="modal-dark-top">
@@ -1125,7 +1169,7 @@
         <div class="ap-calc-card" id="ap-calc-preview"></div>
         <label style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:#1E293B; margin-bottom:10px; cursor:pointer;">
           <input type="checkbox" id="chk-ap-leftover-saldo" />
-          Compensar els minuts sobrantes d'AP al saldo anual d'hores
+          Compensar els minuts sobrants d'AP al saldo anual d'hores
         </label>
 
         <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
@@ -1277,7 +1321,6 @@
       ];
 
       let db = null;
-      // state.days es un almacen global unico por fecha YYYY-MM-DD (evita desincronizacion entre GEN +1 y el año siguiente)
       let state = { years: {}, days: {}, customTypes: [], auditLog: [], lastBackupTs: Date.now(), changesSinceBackup: 0 };
       let undoStack = [];
       let isEditMode = false;
@@ -1529,7 +1572,6 @@
           mergedGlobalDays[dKey] = { type, note, punches, extraMins, customTeoMins };
         };
 
-        // Migrar dias desde estructura antigua (por año) y nueva (global state.days)
         yearKeys.forEach(yk => {
           const srcY = rawObj.years[yk];
           if (srcY && srcY.days && typeof srcY.days === "object") {
@@ -1591,7 +1633,6 @@
         }
       }
 
-      // Usa la media real de los 12 meses del año para calcular los días de AP (57:30h)
       function computeAPDaysFromHours(apHoursStr, jornadesArr) {
         const apMins = toMins(apHoursStr || "57:30");
         const year12 = (jornadesArr || []).slice(0, 12).map(j => toMins(j || "07:08")).filter(m => m > 0);
@@ -1764,7 +1805,6 @@
           };
           saveState(false);
         } else {
-          // Garantir festius carregats si l'any es va crear buit
           ensureHolidaysForYear(year, state.years[year].municipi || "terrassa");
           ensureHolidaysForYear(year + 1, state.years[year].municipi || "terrassa");
         }
@@ -1845,7 +1885,6 @@
                 loggedWorkingDays += 1;
                 loggedTeoMins += teoMins;
 
-                // Excluir el dia de hoy de la proyeccion si aun no se ha cumplido al menos el 50% de la jornada
                 if (!m.nextYear) {
                   const isIncompleteToday = rec.key === todayStr && workedMins < (teoMins * 0.5);
                   if (!isIncompleteToday) {
@@ -1896,6 +1935,233 @@
           remainingWorkingDays,
           projectedEndYearSaldo
         };
+      }
+
+      /* ============================================================
+         3. VISTA ANALÍTICA I GRÀFICS MILLORADA (Tooltip + HH:MM + %)
+         ============================================================ */
+      const tooltipEl = document.getElementById("chart-tooltip");
+
+      function bindChartTooltips(containerEl) {
+        containerEl.querySelectorAll("[data-tip-title]").forEach(el => {
+          el.addEventListener("mouseenter", (e) => {
+            const title = el.dataset.tipTitle;
+            const rows = JSON.parse(el.dataset.tipRows || "[]");
+            let html = `<div class="ctip-title">${escapeHTML(title)}</div>`;
+            rows.forEach(r => {
+              html += `<div class="ctip-row"><span>${escapeHTML(r[0])}</span><strong>${escapeHTML(r[1])}</strong></div>`;
+            });
+            tooltipEl.innerHTML = html;
+            tooltipEl.classList.add("visible");
+            moveTooltip(e);
+          });
+          el.addEventListener("mousemove", moveTooltip);
+          el.addEventListener("mouseleave", () => tooltipEl.classList.remove("visible"));
+        });
+      }
+
+      function moveTooltip(e) {
+        const pad = 12;
+        let x = e.clientX + pad;
+        let y = e.clientY + pad;
+        const rect = tooltipEl.getBoundingClientRect();
+        if (x + rect.width > window.innerWidth - 8) x = e.clientX - rect.width - pad;
+        if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+        tooltipEl.style.left = `${Math.max(6, x)}px`;
+        tooltipEl.style.top = `${Math.max(6, y)}px`;
+      }
+
+      function renderChartsView(metrics) {
+        document.getElementById("lbl-charts-year").textContent = currentYear;
+        const year12 = metrics.monthStats.slice(0, 12);
+        const allTypes = getAllDayTypes();
+
+        /* --- GRÀFIC 1: COMBINAT BARRES SALDO MENSUAL + LÍNIA ACUMULADA (HH:MM) --- */
+        let cumMins = 0;
+        const pointsData = year12.map((ms, idx) => {
+          const monthDeltaMins = ms.realWorkedMins - ms.loggedTeoMins;
+          cumMins += monthDeltaMins;
+          return {
+            label: MONTHS[idx].label,
+            full: MONTHS[idx].full,
+            monthDeltaMins,
+            cumMins,
+            loggedDays: ms.loggedWorkingDays,
+            workingDays: ms.workingDaysCount,
+            realMins: ms.realWorkedMins,
+            loggedTeoMins: ms.loggedTeoMins,
+            teoMonthMins: ms.teoMonthMins
+          };
+        });
+
+        const maxAbsMins = Math.max(
+          120,
+          ...pointsData.map(p => Math.max(Math.abs(p.cumMins), Math.abs(p.monthDeltaMins)))
+        );
+        const maxAxisHrs = Math.ceil(maxAbsMins / 60);
+        const scaleMaxMins = maxAxisHrs * 60;
+
+        const W = 740, H = 185, padL = 48, padR = 20, padT = 22, padB = 26;
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+        const zeroY = padT + plotH / 2;
+        const colStep = plotW / 12;
+
+        const coords = pointsData.map((p, i) => {
+          const x = padL + colStep * i + colStep / 2;
+          const yCum = zeroY - ((p.cumMins / scaleMaxMins) * (plotH / 2));
+          return { ...p, x, yCum };
+        });
+
+        const polylinePts = coords.map(c => `${c.x},${c.yCum}`).join(" ");
+        const areaPts = `${coords[0].x},${zeroY} ${polylinePts} ${coords[coords.length - 1].x},${zeroY}`;
+
+        let svgLine = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+        // Línies de referència
+        svgLine += `<line x1="${padL}" y1="${padT}" x2="${W - padR}" y2="${padT}" stroke="#E2E8F0" stroke-dasharray="3,3"/>`;
+        svgLine += `<line x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}" stroke="#64748B" stroke-width="1.2"/>`;
+        svgLine += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#E2E8F0" stroke-dasharray="3,3"/>`;
+        svgLine += `<text x="${padL - 6}" y="${padT + 4}" text-anchor="end" font-size="9" fill="#475569">+${maxAxisHrs}h</text>`;
+        svgLine += `<text x="${padL - 6}" y="${zeroY + 3}" text-anchor="end" font-size="9" fill="#0F172A" font-weight="bold">00:00</text>`;
+        svgLine += `<text x="${padL - 6}" y="${H - padB}" text-anchor="end" font-size="9" fill="#475569">-${maxAxisHrs}h</text>`;
+
+        // Àrea suau sota la línia acumulada
+        svgLine += `<polygon points="${areaPts}" fill="rgba(37, 99, 235, 0.08)" />`;
+
+        // Barres individuals de cada mes (positiu cap amunt, negatiu cap avall)
+        coords.forEach(c => {
+          if (c.monthDeltaMins !== 0) {
+            const barH = Math.max(3, (Math.abs(c.monthDeltaMins) / scaleMaxMins) * (plotH / 2));
+            const barY = c.monthDeltaMins >= 0 ? zeroY - barH : zeroY;
+            const barFill = c.monthDeltaMins >= 0 ? "rgba(22, 163, 74, 0.35)" : "rgba(220, 38, 38, 0.35)";
+            const barStroke = c.monthDeltaMins >= 0 ? "#16A34A" : "#DC2626";
+            svgLine += `<rect x="${c.x - 11}" y="${barY}" width="22" height="${barH}" fill="${barFill}" stroke="${barStroke}" stroke-width="1" rx="2" />`;
+          }
+        });
+
+        // Línia d'acumulat
+        svgLine += `<polyline fill="none" stroke="#2563EB" stroke-width="2.5" points="${polylinePts}" />`;
+
+        coords.forEach(c => {
+          const dotColor = c.cumMins >= 0 ? "#16A34A" : "#DC2626";
+          const tipRows = JSON.stringify([
+            ["Dies fitxats:", `${c.loggedDays} / ${c.workingDays} dies`],
+            ["Treballades:", `${toHHMM(c.realMins)} h`],
+            ["Saldo del mes:", `${toHHMM(c.monthDeltaMins, true)} h`],
+            ["Saldo acumulat:", `${toHHMM(c.cumMins, true)} h`]
+          ]);
+
+          svgLine += `<g style="cursor:pointer;" data-tip-title="${escapeHTML(c.full)} ${currentYear}" data-tip-rows='${escapeHTML(tipRows)}'>`;
+          // Zona invisible ampla per facilitar el hover
+          svgLine += `<rect x="${c.x - colStep / 2}" y="${padT}" width="${colStep}" height="${plotH}" fill="transparent" />`;
+          svgLine += `<circle cx="${c.x}" cy="${c.yCum}" r="4.5" fill="${dotColor}" stroke="#fff" stroke-width="1.5" />`;
+          const labelY = c.cumMins >= 0 ? c.yCum - 8 : c.yCum + 14;
+          svgLine += `<text x="${c.x}" y="${labelY}" text-anchor="middle" font-size="8.8" font-weight="800" fill="${dotColor}">${toHHMM(c.cumMins, true)}</text>`;
+          svgLine += `<text x="${c.x}" y="${H - 7}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#334155">${c.label}</text>`;
+          svgLine += `</g>`;
+        });
+        svgLine += `</svg>`;
+        const lineContainer = document.getElementById("chart-line-saldo");
+        lineContainer.innerHTML = svgLine;
+        bindChartTooltips(lineContainer);
+
+        /* --- GRÀFIC 2: COMPARATIVA HORES TEÒRIQUES DIES FITXATS VS TREBALLADES REALS --- */
+        const maxHrs = Math.max(160, ...year12.map(ms => Math.max(ms.teoMonthMins, ms.realWorkedMins) / 60));
+        const topGridH = Math.ceil(maxHrs / 40) * 40;
+        const BW = 450, BH = 200, bPadL = 38, bPadB = 25, bPadT = 16;
+        const bPlotW = BW - bPadL - 10;
+        const bPlotH = BH - bPadT - bPadB;
+        const groupW = bPlotW / 12;
+
+        let svgBars = `<svg viewBox="0 0 ${BW} ${BH}" preserveAspectRatio="xMidYMid meet">`;
+        // Graella horitzontal cada 40h
+        for (let hVal = 0; hVal <= topGridH; hVal += 40) {
+          const yPos = BH - bPadB - ((hVal / topGridH) * bPlotH);
+          svgBars += `<line x1="${bPadL}" y1="${yPos}" x2="${BW - 10}" y2="${yPos}" stroke="${hVal === 0 ? "#94A3B8" : "#E2E8F0"}" stroke-dasharray="${hVal === 0 ? "none" : "3,3"}" />`;
+          svgBars += `<text x="${bPadL - 4}" y="${yPos + 3}" text-anchor="end" font-size="8.5" fill="#475569">${hVal}h</text>`;
+        }
+
+        year12.forEach((ms, i) => {
+          // Comparem les hores treballades reals contra les teòriques dels dies efectivament fitxats (si n'hi ha)
+          const refTeoMins = ms.loggedWorkingDays > 0 ? ms.loggedTeoMins : ms.teoMonthMins;
+          const teoH = refTeoMins / 60;
+          const realH = ms.realWorkedMins / 60;
+          const h1 = (teoH / topGridH) * bPlotH;
+          const h2 = (realH / topGridH) * bPlotH;
+          const xBase = bPadL + i * groupW + 3;
+          const barW = (groupW - 8) / 2;
+
+          const tipRows = JSON.stringify([
+            ["Teòric dies fitxats:", `${toHHMM(ms.loggedTeoMins)} h`],
+            ["Treballades reals:", `${toHHMM(ms.realWorkedMins)} h`],
+            ["Total previst mes:", `${toHHMM(ms.teoMonthMins)} h`],
+            ["Diferència:", `${toHHMM(ms.realWorkedMins - ms.loggedTeoMins, true)} h`]
+          ]);
+
+          svgBars += `<g style="cursor:pointer;" data-tip-title="${escapeHTML(MONTHS[i].full)} · Comparativa" data-tip-rows='${escapeHTML(tipRows)}'>`;
+          svgBars += `<rect x="${xBase}" y="${BH - bPadB - h1}" width="${barW}" height="${h1}" fill="#94A3B8" rx="2"></rect>`;
+          svgBars += `<rect x="${xBase + barW + 2}" y="${BH - bPadB - h2}" width="${barW}" height="${h2}" fill="#1B2A4A" rx="2"></rect>`;
+          if (realH > 0) {
+            svgBars += `<text x="${xBase + barW + 2 + barW / 2}" y="${BH - bPadB - h2 - 3}" text-anchor="middle" font-size="7.5" font-weight="800" fill="#1B2A4A">${Math.round(realH)}h</text>`;
+          }
+          svgBars += `<text x="${xBase + barW}" y="${BH - 7}" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#334155">${MONTHS[i].label}</text>`;
+          svgBars += `</g>`;
+        });
+        svgBars += `</svg>`;
+        const barsContainer = document.getElementById("chart-bars-hours");
+        barsContainer.innerHTML = svgBars;
+        bindChartTooltips(barsContainer);
+
+        /* --- GRÀFIC 3: DONUT AMB PERCENTATGES I FILTRE CLICABLE --- */
+        const counts = {};
+        for (let m = 0; m < 12; m++) {
+          const dim = new Date(currentYear, m + 1, 0).getDate();
+          for (let d = 1; d <= dim; d++) {
+            const rec = getDayRecord(currentYear, m, d);
+            if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
+              counts[rec.type] = (counts[rec.type] || 0) + 1;
+            }
+          }
+        }
+
+        const entries = Object.entries(counts).map(([k, val]) => ({
+          key: k,
+          label: allTypes[k]?.short || allTypes[k]?.label || k,
+          color: allTypes[k]?.chartColor || "#64748B",
+          val
+        })).sort((a, b) => b.val - a.val);
+
+        const totalSpecial = entries.reduce((a, b) => a + b.val, 0);
+        const radius = 52, cx = 70, cy = 70, circumference = 2 * Math.PI * radius;
+        let offset = 0;
+
+        let svgDonut = `<div style="display:flex; align-items:center; gap:10px; width:100%; height:100%;">`;
+        svgDonut += `<svg viewBox="0 0 140 140" preserveAspectRatio="xMidYMid meet" style="width:120px; height:120px; flex-shrink:0;">`;
+        if (totalSpecial === 0) {
+          svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#CBD5E1" stroke-width="18"/>`;
+        } else {
+          entries.forEach(item => {
+            const pct = item.val / totalSpecial;
+            const dash = pct * circumference;
+            svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${item.color}" stroke-width="18"
+              stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"></circle>`;
+            offset += dash;
+          });
+        }
+        svgDonut += `<text x="${cx}" y="${cy + 1}" text-anchor="middle" font-size="14" font-weight="800" fill="#0F172A">${totalSpecial}d</text>`;
+        svgDonut += `<text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="8" font-weight="700" fill="#64748B">TOTAL</text>`;
+        svgDonut += `</svg>`;
+
+        svgDonut += `<div style="display:flex; flex-direction:column; gap:2px; font-size:10px; width:100%; overflow-y:auto; max-height:100%;">`;
+        entries.forEach(item => {
+          const pctStr = totalSpecial > 0 ? Math.round((item.val / totalSpecial) * 100) : 0;
+          svgDonut += `<div class="donut-legend-row" data-jump-history-type="${escapeHTML(item.key)}" title="Clica per veure els ${item.val} dies a l'Historial">
+            <span><span style="display:inline-block;width:8px;height:8px;background:${item.color};border-radius:2px;margin-right:5px;"></span>${escapeHTML(item.label)}</span>
+            <span><strong>${item.val}d</strong> <span style="color:#64748B; font-size:9px;">(${pctStr}%)</span></span>
+          </div>`;
+        });
+        svgDonut += `</div></div>`;
+        document.getElementById("chart-donut-days").innerHTML = svgDonut;
       }
 
       function toggleHighlightType(typeKey) {
@@ -2348,130 +2614,6 @@
           `;
           grid.appendChild(card);
         }
-      }
-
-      /* 3. VISTA ANALÍTICA I GRÀFICS */
-      function renderChartsView(metrics) {
-        document.getElementById("lbl-charts-year").textContent = currentYear;
-        const year12 = metrics.monthStats.slice(0, 12);
-        const allTypes = getAllDayTypes();
-
-        let cumMins = 0;
-        const pointsData = year12.map((ms, idx) => {
-          const monthLoggedSaldo = ms.realWorkedMins - ms.loggedTeoMins;
-          cumMins += monthLoggedSaldo;
-          return {
-            label: MONTHS[idx].label,
-            monthHrs: +(monthLoggedSaldo / 60).toFixed(2),
-            cumHrs: +(cumMins / 60).toFixed(2)
-          };
-        });
-
-        const maxAbs = Math.max(5, ...pointsData.map(p => Math.max(Math.abs(p.cumHrs), Math.abs(p.monthHrs))));
-        const W = 720, H = 175, padL = 44, padR = 20, padT = 18, padB = 24;
-        const plotW = W - padL - padR;
-        const plotH = H - padT - padB;
-        const zeroY = padT + plotH / 2;
-
-        const coords = pointsData.map((p, i) => {
-          const x = padL + (i * (plotW / 11));
-          const y = zeroY - ((p.cumHrs / maxAbs) * (plotH / 2));
-          return { ...p, x, y };
-        });
-
-        const polylinePts = coords.map(c => `${c.x},${c.y}`).join(" ");
-
-        let svgLine = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
-        svgLine += `<line x1="${padL}" y1="${padT}" x2="${W - padR}" y2="${padT}" stroke="#CBD5E1" stroke-dasharray="3,3"/>`;
-        svgLine += `<line x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}" stroke="#64748B" stroke-width="1.2"/>`;
-        svgLine += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#CBD5E1" stroke-dasharray="3,3"/>`;
-        svgLine += `<text x="${padL - 6}" y="${padT + 4}" text-anchor="end" font-size="9" fill="#475569">+${maxAbs.toFixed(0)}h</text>`;
-        svgLine += `<text x="${padL - 6}" y="${zeroY + 3}" text-anchor="end" font-size="9" fill="#0F172A" font-weight="bold">0h</text>`;
-        svgLine += `<text x="${padL - 6}" y="${H - padB}" text-anchor="end" font-size="9" fill="#475569">-${maxAbs.toFixed(0)}h</text>`;
-        svgLine += `<polyline fill="none" stroke="#2563EB" stroke-width="2.5" points="${polylinePts}" />`;
-
-        coords.forEach(c => {
-          const dotColor = c.cumHrs >= 0 ? "#16A34A" : "#DC2626";
-          svgLine += `<circle cx="${c.x}" cy="${c.y}" r="4.5" fill="${dotColor}" stroke="#fff" stroke-width="1.5" />`;
-          svgLine += `<text x="${c.x}" y="${c.y - 7}" text-anchor="middle" font-size="9" font-weight="bold" fill="${dotColor}">${c.cumHrs >= 0 ? "+" : ""}${c.cumHrs}h</text>`;
-          svgLine += `<text x="${c.x}" y="${H - 6}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#334155">${c.label}</text>`;
-        });
-        svgLine += `</svg>`;
-        document.getElementById("chart-line-saldo").innerHTML = svgLine;
-
-        const maxHrs = Math.max(160, ...year12.map(ms => Math.max(ms.teoMonthMins, ms.realWorkedMins) / 60));
-        const BW = 430, BH = 195, bPadL = 34, bPadB = 24, bPadT = 12;
-        const bPlotW = BW - bPadL - 10;
-        const bPlotH = BH - bPadT - bPadB;
-        const groupW = bPlotW / 12;
-
-        let svgBars = `<svg viewBox="0 0 ${BW} ${BH}" preserveAspectRatio="xMidYMid meet">`;
-        svgBars += `<line x1="${bPadL}" y1="${BH - bPadB}" x2="${BW - 10}" y2="${BH - bPadB}" stroke="#94A3B8" />`;
-        svgBars += `<text x="${bPadL - 4}" y="${bPadT + 6}" text-anchor="end" font-size="8.5" fill="#475569">${Math.round(maxHrs)}h</text>`;
-        svgBars += `<text x="${bPadL - 4}" y="${BH - bPadB}" text-anchor="end" font-size="8.5" fill="#475569">0h</text>`;
-
-        year12.forEach((ms, i) => {
-          const teoH = ms.teoMonthMins / 60;
-          const realH = ms.realWorkedMins / 60;
-          const h1 = (teoH / maxHrs) * bPlotH;
-          const h2 = (realH / maxHrs) * bPlotH;
-          const xBase = bPadL + i * groupW + 4;
-          const barW = (groupW - 10) / 2;
-
-          svgBars += `<rect x="${xBase}" y="${BH - bPadB - h1}" width="${barW}" height="${h1}" fill="#94A3B8" rx="2"></rect>`;
-          svgBars += `<rect x="${xBase + barW + 2}" y="${BH - bPadB - h2}" width="${barW}" height="${h2}" fill="#1B2A4A" rx="2"></rect>`;
-          svgBars += `<text x="${xBase + barW}" y="${BH - 7}" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#334155">${MONTHS[i].label}</text>`;
-        });
-        svgBars += `</svg>`;
-        document.getElementById("chart-bars-hours").innerHTML = svgBars;
-
-        const counts = {};
-        for (let m = 0; m < 12; m++) {
-          const dim = new Date(currentYear, m + 1, 0).getDate();
-          for (let d = 1; d <= dim; d++) {
-            const rec = getDayRecord(currentYear, m, d);
-            if (rec.type !== "laborable" && rec.type !== "cap_setmana") {
-              counts[rec.type] = (counts[rec.type] || 0) + 1;
-            }
-          }
-        }
-
-        const entries = Object.entries(counts).map(([k, val]) => ({
-          key: k,
-          label: allTypes[k]?.short || allTypes[k]?.label || k,
-          color: allTypes[k]?.chartColor || "#64748B",
-          val
-        })).sort((a, b) => b.val - a.val);
-
-        const totalSpecial = entries.reduce((a, b) => a + b.val, 0);
-        const radius = 52, cx = 70, cy = 70, circumference = 2 * Math.PI * radius;
-        let offset = 0;
-
-        let svgDonut = `<div style="display:flex; align-items:center; gap:10px; width:100%; height:100%;">`;
-        svgDonut += `<svg viewBox="0 0 140 140" preserveAspectRatio="xMidYMid meet" style="width:125px; height:125px; flex-shrink:0;">`;
-        if (totalSpecial === 0) {
-          svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#CBD5E1" stroke-width="18"/>`;
-        } else {
-          entries.forEach(item => {
-            const pct = item.val / totalSpecial;
-            const dash = pct * circumference;
-            svgDonut += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${item.color}" stroke-width="18"
-              stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"></circle>`;
-            offset += dash;
-          });
-        }
-        svgDonut += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="14" font-weight="800" fill="#0F172A">${totalSpecial}d</text>`;
-        svgDonut += `</svg>`;
-
-        svgDonut += `<div style="display:flex; flex-direction:column; gap:3px; font-size:10px; width:100%; overflow-y:auto; max-height:100%;">`;
-        entries.forEach(item => {
-          svgDonut += `<div style="display:flex; justify-content:space-between; align-items:center;">
-            <span><span style="display:inline-block;width:8px;height:8px;background:${item.color};border-radius:2px;margin-right:4px;"></span>${escapeHTML(item.label)}</span>
-            <strong>${item.val}d</strong>
-          </div>`;
-        });
-        svgDonut += `</div></div>`;
-        document.getElementById("chart-donut-days").innerHTML = svgDonut;
       }
 
       /* 4. VISTA HISTORIAL I CERCA */
@@ -3035,6 +3177,19 @@
       });
 
       document.addEventListener("click", async (e) => {
+        // Saltar des del gràfic Donut a l'Historial filtrat per aquell permís
+        const jumpRow = e.target.closest("[data-jump-history-type]");
+        if (jumpRow) {
+          const tKey = jumpRow.dataset.jumpHistoryType;
+          activeView = "history";
+          mobileTab = "history";
+          renderApp();
+          const sel = document.getElementById("filter-hist-type");
+          sel.value = tKey;
+          renderHistoryView();
+          return;
+        }
+
         const mobMenuBtn = e.target.closest("#btn-mobile-menu");
         if (mobMenuBtn) {
           const drawer = document.getElementById("top-actions-drawer");
